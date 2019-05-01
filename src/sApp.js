@@ -1,31 +1,27 @@
 import React from "react";
 import { Container, Row, Button, Col } from "react-bootstrap";
+import "./App.css";
 import Navigationbar from "./Navigationbar";
-import TimerControls from "./TimerControls";
-import ModalSettings from "./ModalSettings";
+//import TimerControls from "./TimerControls";
+//import ModalSettings from "./ModalSettings";
 
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      // prop used by SetInterval and ClearInterval
       timerId: 0,
       start: 0,
       // this property is used by tick method
-      startTime: "00:25",
-      // value displayed by timer
+      startTime: "",
       currentTime: "",
       workTime: "00:25",
       shortBreakTime: "00:10",
       longBreakTime: "00:30",
       // how many pomodoros before long break
       lBDelay: 4,
-      // session is Ready when startTime is updated
-      sessionReady: "work",
       workRunning: false,
       shortBreakRunning: false,
       longBreakRunning: false,
-      // displays modal when toggled
       showSettings: false
     };
   }
@@ -45,56 +41,40 @@ class App extends React.Component {
     this.updateCurrentTime();
   }
 
+  updateStartTime = () => {
+    if (this.state.shortBreakRunning === true) {
+      this.setState({ startTimer: this.state.shortBreakTime });
+    }
+    if (this.state.longBreakRunning === true) {
+      this.setState({ startTimer: this.state.longBreakTime });
+    } else {
+      this.setState({ startTimer: this.state.workTime });
+    }
+  };
+
   handleStart = () => {
-    const session = this.state.sessionReady;
-    const r = "Running";
-    const sessionRunning = session + r;
-    // also need to toggle the session that was previously running
-    // check for the name of the other two sessions
-    let otherSession;
-    let remainingSesssion;
-    if (this.state.sessionReady === "work") {
-      otherSession = "shortBreak";
-      remainingSesssion = "longBreak";
-    }
-    if (this.state.sessionReady === "shortBreak") {
-      otherSession = "work";
-      remainingSesssion = "longBreak";
-    }
-    if (this.state.sessionReady === "longBreak") {
-      otherSession = "work";
-      remainingSesssion = "shortBreak";
-    }
-    console.log(otherSession);
-    console.log(remainingSesssion);
-    const otherSessionRunning = otherSession + r;
-    const remainingSesssionRunning = remainingSesssion + r;
-    // check which of the two sessions was running and toggle it
-    if (this.state[otherSessionRunning] === "true") {
-      this.setState({ [otherSessionRunning]: false }, () => {
-        console.log(this.state.workRunning);
-        console.log(this.state.shortBreakRunning);
-        console.log(this.state.longBreakRunning);
-      });
-    }
-    if (this.state[remainingSesssionRunning] === "true") {
-      this.setState({ [remainingSesssionRunning]: false }, () => {
-        console.log(this.state.workRunning);
-        console.log(this.state.shortBreakRunning);
-        console.log(this.state.longBreakRunning);
-      });
-    }
-    // toggle session that is starting now
-    this.setState({ [sessionRunning]: true, start: Date.now() }, () => {
-      console.log(this.state.workRunning);
-      console.log(this.state.shortBreakRunning);
-      console.log(this.state.longBreakRunning);
+    this.setState({ workRunning: true, start: Date.now() }, () => {
+      this.updateStartTime();
     });
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
+    console.log(this.state.workRunning);
   };
 
   setTimer = () => {
+    console.log(this.state.workRunning);
+    this.updateStartTime();
+    {
+      /*if (this.state.shortBreakRunning === true) {
+      time = this.state.shortBreakTime;
+    }
+    if (this.state.longBreakRunning === true) {
+      time = this.state.longBreakTime;
+    } else {
+      time = this.state.workTime;
+    }*/
+    }
     let time = this.state.startTime;
+    console.log(time);
     // convert string to number and then to seconds
     let duration = toSeconds(time);
     let start = this.state.start;
@@ -117,16 +97,12 @@ class App extends React.Component {
   };
 
   handleReset = () => {
+    console.log("reset");
     clearInterval(this.state.timerId);
-    const session = this.state.sessionReady;
-    const r = "Running";
-    const sessionRunning = session + r;
-    this.setState({ [sessionRunning]: false });
-    const t = "Time";
-    const sessionTime = session + t;
-    const time = this.state[sessionTime];
-    this.setState({ currentTime: time });
-    this.setState({ startTime: time });
+    this.setState({ workRunning: false });
+    // THIS WILL NEED TO CHANGE
+    this.setState({ currentTime: "00:10" });
+    this.setState({ startTime: "00:10" });
   };
 
   handleChange = event => {
@@ -146,22 +122,15 @@ class App extends React.Component {
 
   handleSession = e => {
     const name = e.target.name;
-    this.setState({ sessionReady: name });
-    const t = "Time";
-    const n = name + t;
-    // sessionTime is the time duration of the session (ex 25 min)
-    const sessionTime = this.state[n];
+    const session = this.state[name];
+    const sessionName = name.replace(/Time$/, "");
     const r = "Running";
-    // sessionRunning is the prop in state that is toggled when timer starts
-    const sessionRunning = name + r;
+    const sessionRunning = new RegExp(sessionName + r);
     // check if session is already running. If yes display alert, if not update StartTime
     // so session is ready to start
-    if (this.state[sessionRunning] === true) {
-      alert("Session is already running");
-    } else {
-      clearInterval(this.state.timerId);
-      this.setState({ startTime: sessionTime, currentTime: sessionTime });
-    }
+    this.state[sessionRunning] === true
+      ? alert("Session is already running")
+      : this.setState({ startTime: session });
   };
 
   render() {
@@ -173,7 +142,7 @@ class App extends React.Component {
             <Button variant="secondary" onClick={this.handleShow}>
               Settings
             </Button>
-            <ModalSettings
+            {/*<ModalSettings
               show={this.state.showSettings}
               handleClose={this.handleClose}
               handleChange={this.handleChange}
@@ -181,19 +150,19 @@ class App extends React.Component {
               shortBreakTime={this.state.shortBreakTime}
               longBreakTime={this.state.longBreakTime}
               lBDelay={this.state.lBDelay}
-            />
+            />*/}
           </Col>
           <Col md={{ span: 1, offset: 4 }}>{this.state.currentTime}</Col>
           <Col md={{ span: 3, offset: 9 }}>Pomodoros completed:</Col>
         </Row>
-        <TimerControls
+        {/*<TimerControls
           handleStart={this.handleStart}
           handleStop={this.handleStop}
           handleReset={this.handleReset}
-        />
-        <Row className="justify-content-md-center">
-          <Col>To do list</Col>
-        </Row>
+        />*/}
+        <Row className="justify-content-md-center"> 
+        	<Col>To do list</Col>
+		</Row>
       </Container>
     );
   }

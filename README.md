@@ -1,3 +1,5 @@
+A simple React app to increase and track productivity using the tomato-timer technique
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

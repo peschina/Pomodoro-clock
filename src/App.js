@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Row, Button, Col } from "react-bootstrap";
+import { Container, Row, Button, Col, ListGroup } from "react-bootstrap";
 import Navigationbar from "./Navigationbar";
 import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
@@ -65,31 +65,17 @@ class App extends React.Component {
       otherSession = "work";
       remainingSesssion = "shortBreak";
     }
-    console.log(otherSession);
-    console.log(remainingSesssion);
     const otherSessionRunning = otherSession + r;
-    const remainingSesssionRunning = remainingSesssion + r;
-    // check which of the two sessions was running and toggle it
-    if (this.state[otherSessionRunning] === "true") {
-      this.setState({ [otherSessionRunning]: false }, () => {
-        console.log(this.state.workRunning);
-        console.log(this.state.shortBreakRunning);
-        console.log(this.state.longBreakRunning);
-      });
+    const remainingSessionRunning = remainingSesssion + r;
+    // check which of the two sessions was previously running and toggle it if needed
+    if (this.state[otherSessionRunning]) {
+      this.setState(prevState => ({ [otherSessionRunning]: !prevState }));
     }
-    if (this.state[remainingSesssionRunning] === "true") {
-      this.setState({ [remainingSesssionRunning]: false }, () => {
-        console.log(this.state.workRunning);
-        console.log(this.state.shortBreakRunning);
-        console.log(this.state.longBreakRunning);
-      });
+    if (this.state[remainingSessionRunning]) {
+      this.setState({ [remainingSessionRunning]: false });
     }
     // toggle session that is starting now
-    this.setState({ [sessionRunning]: true, start: Date.now() }, () => {
-      console.log(this.state.workRunning);
-      console.log(this.state.shortBreakRunning);
-      console.log(this.state.longBreakRunning);
-    });
+    this.setState({ [sessionRunning]: true, start: Date.now() });
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
   };
 
@@ -192,7 +178,15 @@ class App extends React.Component {
           handleReset={this.handleReset}
         />
         <Row className="justify-content-md-center">
-          <Col>To do list</Col>
+          <Col>
+            To do list
+            <ListGroup>
+              <ListGroup.Item>Fix bugs</ListGroup.Item>
+              <ListGroup.Item>Make laundry</ListGroup.Item>
+              <ListGroup.Item>Buy groceries</ListGroup.Item>
+              <ListGroup.Item>Call doctor</ListGroup.Item>
+            </ListGroup>
+          </Col>
         </Row>
       </Container>
     );

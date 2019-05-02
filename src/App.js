@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, Row, Button, Col, ListGroup } from "react-bootstrap";
+import { Container, Row, Button, Col, ListGroup, Form } from "react-bootstrap";
 import Navigationbar from "./Navigationbar";
 import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
@@ -26,7 +26,14 @@ class App extends React.Component {
       shortBreakRunning: false,
       longBreakRunning: false,
       // displays modal when toggled
-      showSettings: false
+      showSettings: false,
+      pomodorosCompleted: 0,
+      toDoItems: [
+        { id: 0, name: "Fix bugs", completed: false },
+        { id: 1, name: "Make laundry", completed: false },
+        { id: 2, name: "Buy groceries", completed: false },
+        { id: 3, name: "Call doctor", completed: false }
+      ]
     };
   }
 
@@ -41,11 +48,26 @@ class App extends React.Component {
     }
   };
 
+  updateStartTime = () => {
+    if (this.state.shortBreakRunning === true) {
+      this.setState({ startTime: this.state.shortBreakTime }, () =>
+        console.log("sb is running")
+      );
+    }
+    if (this.state.longBreakRunning === true) {
+      this.setState({ startTime: this.state.longBreakTime });
+    } else {
+      this.setState({ startTime: this.state.workTime });
+    }
+  };
+
   componentDidMount() {
     this.updateCurrentTime();
+    this.updateStartTime();
   }
 
   handleStart = () => {
+    this.updateStartTime();
     const session = this.state.sessionReady;
     const r = "Running";
     const sessionRunning = session + r;
@@ -90,8 +112,32 @@ class App extends React.Component {
 
     if (this.state.currentTime === "00:00") {
       clearInterval(this.state.timerId);
-      this.updateCurrentTime();
+      // FINISH THIS
+      if (this.state.sessionReady === "work") {
+        let counter = this.state.pomodorosCompleted;
+        const count = counter + 1;
+        this.setState({ pomodorosCompleted: count }, () =>
+          console.log(this.state.pomodorosCompleted)
+        );
+        this.setState(
+          {
+            sessionReady: "shortBreak",
+            workRunning: false,
+            shortBreakRunning: true
+          },
+          () =>
+            console.log(
+              this.state.sessionReady,
+              this.state.workRunning,
+              this.state.shortBreakRunning
+            )
+        );
+        this.setState({ startTime: this.state.shortBreakTime });
+        this.handleStart();
+      }
+      // CHANGE THIS
       this.setState({ workRunning: false });
+      this.updateCurrentTime();
     }
   };
 
@@ -148,6 +194,51 @@ class App extends React.Component {
       clearInterval(this.state.timerId);
       this.setState({ startTime: sessionTime, currentTime: sessionTime });
     }
+    // TOGGLE TO FALSE LAST SESSION ACTIVE HERE?
+  };
+
+  toggleCompleted = () => {
+    console.log("completed");
+  };
+
+  handleDeleteItem = () => {
+    console.log("delete item");
+  };
+
+  // for each ToDo Item return a li that displays the name of the item
+  // and two inputs, one to mark the item as completed and one to delete the item
+  createLi() {
+    const list = this.state.toDoItems.map(item => {
+      const name = item.name;
+      return (
+        <ListGroup.Item key={item.id}>
+          <Row>
+            <Col>{name}</Col>
+            <Col xs={{ span: 2, offset: 7 }}>
+              <Form.Control
+                type="button"
+                variant="light"
+                value="completed"
+                onClick={this.toggleCompleted}
+              />
+            </Col>
+            <Col>
+              <Form.Control
+                type="button"
+                variant="light"
+                value="delete"
+                onClick={this.handleDeleteItem}
+              />
+            </Col>
+          </Row>
+        </ListGroup.Item>
+      );
+    });
+    return list;
+  }
+
+  handleClearList = () => {
+    console.log("clear all");
   };
 
   render() {
@@ -170,22 +261,24 @@ class App extends React.Component {
             />
           </Col>
           <Col md={{ span: 1, offset: 4 }}>{this.state.currentTime}</Col>
-          <Col md={{ span: 3, offset: 9 }}>Pomodoros completed:</Col>
+          <Col md={{ span: 3, offset: 9 }}>
+            Pomodoros completed: {this.state.pomodorosCompleted}
+          </Col>
         </Row>
         <TimerControls
           handleStart={this.handleStart}
           handleStop={this.handleStop}
           handleReset={this.handleReset}
         />
-        <Row className="justify-content-md-center">
+        <Row className="justify-content-center">
           <Col>
             To do list
-            <ListGroup>
-              <ListGroup.Item>Fix bugs</ListGroup.Item>
-              <ListGroup.Item>Make laundry</ListGroup.Item>
-              <ListGroup.Item>Buy groceries</ListGroup.Item>
-              <ListGroup.Item>Call doctor</ListGroup.Item>
-            </ListGroup>
+            <Form>
+              <ListGroup>{this.createLi()}</ListGroup>
+              <Button value="clear" onClick={this.handleClearList}>
+                Clear
+              </Button>
+            </Form>
           </Col>
         </Row>
       </Container>

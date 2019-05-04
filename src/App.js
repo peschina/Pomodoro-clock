@@ -28,6 +28,7 @@ class App extends React.Component {
       // displays modal when toggled
       showSettings: false,
       pomodorosCompleted: 0,
+      activeKey: "work",
       toDoItems: [
         { id: 0, name: "Fix bugs", completed: false },
         { id: 1, name: "Make laundry", completed: false },
@@ -38,21 +39,20 @@ class App extends React.Component {
   }
 
   updateCurrentTime = () => {
-    if (this.state.shortBreakRunning === true) {
+    if (this.state.sessionReady === "shortBreak") {
       this.setState({ currentTime: this.state.shortBreakTime });
     }
-    if (this.state.longBreakRunning === true) {
+    if (this.state.sessionReady === "longBreak") {
       this.setState({ currentTime: this.state.longBreakTime });
-    } else {
+    }
+    if (this.state.sessionReady === "work") {
       this.setState({ currentTime: this.state.workTime });
     }
   };
 
   updateStartTime = () => {
     if (this.state.shortBreakRunning === true) {
-      this.setState({ startTime: this.state.shortBreakTime }, () =>
-        console.log("sb is running")
-      );
+      this.setState({ startTime: this.state.shortBreakTime });
     }
     if (this.state.longBreakRunning === true) {
       this.setState({ startTime: this.state.longBreakTime });
@@ -67,35 +67,10 @@ class App extends React.Component {
   }
 
   handleStart = () => {
-    this.updateStartTime();
     const session = this.state.sessionReady;
     const r = "Running";
     const sessionRunning = session + r;
-    // also need to toggle the session that was previously running
-    // check for the name of the other two sessions
-    let otherSession;
-    let remainingSesssion;
-    if (this.state.sessionReady === "work") {
-      otherSession = "shortBreak";
-      remainingSesssion = "longBreak";
-    }
-    if (this.state.sessionReady === "shortBreak") {
-      otherSession = "work";
-      remainingSesssion = "longBreak";
-    }
-    if (this.state.sessionReady === "longBreak") {
-      otherSession = "work";
-      remainingSesssion = "shortBreak";
-    }
-    const otherSessionRunning = otherSession + r;
-    const remainingSessionRunning = remainingSesssion + r;
-    // check which of the two sessions was previously running and toggle it if needed
-    if (this.state[otherSessionRunning]) {
-      this.setState(prevState => ({ [otherSessionRunning]: !prevState }));
-    }
-    if (this.state[remainingSessionRunning]) {
-      this.setState({ [remainingSessionRunning]: false });
-    }
+    this.setState({ startTime: this.state.currentTime });
     // toggle session that is starting now
     this.setState({ [sessionRunning]: true, start: Date.now() });
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
@@ -112,38 +87,63 @@ class App extends React.Component {
 
     if (this.state.currentTime === "00:00") {
       clearInterval(this.state.timerId);
-      // FINISH THIS
-      if (this.state.sessionReady === "work") {
-        let counter = this.state.pomodorosCompleted;
-        const count = counter + 1;
-        this.setState({ pomodorosCompleted: count }, () =>
-          console.log(this.state.pomodorosCompleted)
-        );
-        this.setState(
-          {
-            sessionReady: "shortBreak",
-            workRunning: false,
-            shortBreakRunning: true
-          },
-          () =>
-            console.log(
-              this.state.sessionReady,
-              this.state.workRunning,
-              this.state.shortBreakRunning
-            )
-        );
-        this.setState({ startTime: this.state.shortBreakTime });
-        this.handleStart();
+      // according to session that just finished update props in state and start new session
+      switch (this.state.sessionReady) {
+        case "work":
+          console.log("session finished is work");
+          let counter = this.state.pomodorosCompleted;
+          const count = counter + 1;
+          this.setState({ pomodorosCompleted: count });
+          // check if we already have n pomodoros completed and need to switch to long break
+          const delay = this.state.lBDelay;
+          const remainder = this.state.pomodorosCompleted % delay;
+          if (remainder == 0) {
+            this.setState({
+              sessionReady: "longBreak",
+              workRunning: false,
+              longBreakRunning: true
+            });
+          } else {
+            this.setState({
+              sessionReady: "shortBreak",
+              workRunning: false,
+              shortBreakRunning: true
+            });
+          }
+          break;
+        case "shortBreak":
+          console.log("session finished is shortbreak");
+          this.setState({
+            sessionReady: "work",
+            shortBreakRunning: false,
+            workRunning: true
+          });
+          break;
+        case "longBreak":
+          console.log("session finished is longBreak");
+          this.setState({
+            sessionReady: "work",
+            longBreakRunning: false,
+            workRunning: true
+          });
+          break;
       }
-      // CHANGE THIS
-      this.setState({ workRunning: false });
+      this.updateStartTime();
       this.updateCurrentTime();
+      // when switching session need to set active class to the nav link
+      this.setState({ activeKey: this.state.sessionReady }, () =>
+        console.log("active key is" + this.state.activeKey)
+      );
+      this.handleStart();
     }
   };
 
   handleStop = () => {
     clearInterval(this.state.timerId);
-    this.setState({ workRunning: false });
+    let sessionName = this.state.sessionReady;
+    let r = "Running";
+    let sessionRunning = sessionName + r;
+    this.setState({ [sessionRunning]: false });
     let current = this.state.currentTime;
     this.setState({ startTime: current });
   };
@@ -168,14 +168,15 @@ class App extends React.Component {
 
   // closes the modal for settings
   handleClose = () => {
-    this.setState({ showSettings: false });
-    this.updateCurrentTime();
+    this.setState({ showSettings: false }, () => this.updateCurrentTime());
   };
 
   handleShow = () => {
     this.setState({ showSettings: true });
   };
 
+  // this method sets props in state so that the session is ready to start
+  // the session doesn't start automatically, but only when Start button is clicked!
   handleSession = e => {
     const name = e.target.name;
     this.setState({ sessionReady: name });
@@ -193,8 +194,13 @@ class App extends React.Component {
     } else {
       clearInterval(this.state.timerId);
       this.setState({ startTime: sessionTime, currentTime: sessionTime });
+      // Toggle all sessions to false
+      this.setState({
+        workRunning: false,
+        shortBreakRunning: false,
+        longBreakRunning: false
+      });
     }
-    // TOGGLE TO FALSE LAST SESSION ACTIVE HERE?
   };
 
   toggleCompleted = () => {
@@ -204,6 +210,10 @@ class App extends React.Component {
   handleDeleteItem = () => {
     console.log("delete item");
   };
+
+  handleSelect(eventKey) {
+    console.log(`selected ${eventKey}`);
+  }
 
   // for each ToDo Item return a li that displays the name of the item
   // and two inputs, one to mark the item as completed and one to delete the item
@@ -244,9 +254,13 @@ class App extends React.Component {
   render() {
     return (
       <Container>
-        <Navigationbar handleSession={this.handleSession} />
+        <Navigationbar
+          handleSession={this.handleSession}
+          handleSelect={this.handleSelect}
+          activeKeyInNav={this.state.activeKey}
+        />
         <Row className="mt-5 mb-5">
-          <Col md="1">
+          <Col xs="1">
             <Button variant="secondary" onClick={this.handleShow}>
               Settings
             </Button>

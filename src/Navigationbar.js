@@ -1,34 +1,42 @@
 import React from "react";
-import { Navbar, Nav, Button } from "react-bootstrap";
+import { Nav } from "react-bootstrap";
 
 function Navigationbar(props) {
   return (
-    <Navbar className="justify-content-center" bg="light">
-      <Navbar.Brand>Session</Navbar.Brand>
+    <Nav
+      variant="tabs"
+      defaultActiveKey={(props.activeKeyInNav, () => console.log("received"))}
+      onSelect={k => props.handleSelect(k)}
+    >
       <Nav.Item>
-        <Button name="work" onClick={props.handleSession} variant="light">
-          Work
-        </Button>
+        <Nav.Link eventKey="disabled" disabled>
+          Session
+        </Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Button
+        <Nav.Link name="work" eventKey="work" onClick={props.handleSession}>
+          Work
+        </Nav.Link>
+      </Nav.Item>
+      <Nav.Item>
+        <Nav.Link
           name="shortBreak"
+          eventKey="shortBreak"
           onClick={props.handleSession}
-          variant="light"
         >
           Short break
-        </Button>
+        </Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Button
+        <Nav.Link
           name="longBreak"
+          eventKey="longBreak"
           onClick={props.handleSession}
-          variant="light"
         >
           Long break
-        </Button>
+        </Nav.Link>
       </Nav.Item>
-    </Navbar>
+    </Nav>
   );
 }
 

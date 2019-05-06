@@ -5,8 +5,8 @@ function Navigationbar(props) {
   return (
     <Nav
       variant="tabs"
-      defaultActiveKey={(props.activeKeyInNav, () => console.log("received"))}
-      onSelect={k => props.handleSelect(k)}
+      key={props.activeKeyInNav}
+      defaultActiveKey={props.activeKeyInNav}
     >
       <Nav.Item>
         <Nav.Link eventKey="disabled" disabled>

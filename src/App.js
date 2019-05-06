@@ -3,6 +3,8 @@ import { Container, Row, Button, Col, ListGroup, Form } from "react-bootstrap";
 import Navigationbar from "./Navigationbar";
 import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
+import ToDoList from "./ToDoList";
+import { tick, toSeconds } from "./Utils";
 
 class App extends React.Component {
   constructor() {
@@ -29,6 +31,7 @@ class App extends React.Component {
       showSettings: false,
       pomodorosCompleted: 0,
       activeKey: "work",
+      toAdd: "",
       toDoItems: [
         { id: 0, name: "Fix bugs", completed: false },
         { id: 1, name: "Make laundry", completed: false },
@@ -36,6 +39,7 @@ class App extends React.Component {
         { id: 3, name: "Call doctor", completed: false }
       ]
     };
+    this.idCount = 3;
   }
 
   updateCurrentTime = () => {
@@ -90,14 +94,13 @@ class App extends React.Component {
       // according to session that just finished update props in state and start new session
       switch (this.state.sessionReady) {
         case "work":
-          console.log("session finished is work");
           let counter = this.state.pomodorosCompleted;
           const count = counter + 1;
           this.setState({ pomodorosCompleted: count });
           // check if we already have n pomodoros completed and need to switch to long break
           const delay = this.state.lBDelay;
           const remainder = this.state.pomodorosCompleted % delay;
-          if (remainder == 0) {
+          if (remainder === 0) {
             this.setState({
               sessionReady: "longBreak",
               workRunning: false,
@@ -112,7 +115,6 @@ class App extends React.Component {
           }
           break;
         case "shortBreak":
-          console.log("session finished is shortbreak");
           this.setState({
             sessionReady: "work",
             shortBreakRunning: false,
@@ -120,7 +122,6 @@ class App extends React.Component {
           });
           break;
         case "longBreak":
-          console.log("session finished is longBreak");
           this.setState({
             sessionReady: "work",
             longBreakRunning: false,
@@ -131,9 +132,7 @@ class App extends React.Component {
       this.updateStartTime();
       this.updateCurrentTime();
       // when switching session need to set active class to the nav link
-      this.setState({ activeKey: this.state.sessionReady }, () =>
-        console.log("active key is" + this.state.activeKey)
-      );
+      this.setState({ activeKey: this.state.sessionReady });
       this.handleStart();
     }
   };
@@ -203,29 +202,41 @@ class App extends React.Component {
     }
   };
 
-  toggleCompleted = () => {
-    console.log("completed");
+  toggleCompleted = e => {
+    const id = e.target.getAttribute("data-id");
+    const listUpdated = this.state.toDoItems.map(item => {
+      if (item.id == id) {
+        item.completed = true;
+        return item;
+      } else {
+        return item;
+      }
+    });
+    this.setState({ toDoItems: listUpdated });
   };
 
-  handleDeleteItem = () => {
-    console.log("delete item");
+  handleDeleteItem = e => {
+    const id = e.target.getAttribute("data-id");
+    const filtered = this.state.toDoItems.filter(item => item.id != id);
+    this.setState({ toDoItems: filtered });
   };
-
-  handleSelect(eventKey) {
-    console.log(`selected ${eventKey}`);
-  }
 
   // for each ToDo Item return a li that displays the name of the item
   // and two inputs, one to mark the item as completed and one to delete the item
   createLi() {
     const list = this.state.toDoItems.map(item => {
       const name = item.name;
+      // THIS IS TEMPORARY
+      let style = item.completed
+        ? { backgroundColor: "green" }
+        : { backgroundColor: "white" };
       return (
-        <ListGroup.Item key={item.id}>
+        <ListGroup.Item key={item.id} style={style}>
           <Row>
             <Col>{name}</Col>
             <Col xs={{ span: 2, offset: 7 }}>
               <Form.Control
+                data-id={item.id}
                 type="button"
                 variant="light"
                 value="completed"
@@ -234,6 +245,7 @@ class App extends React.Component {
             </Col>
             <Col>
               <Form.Control
+                data-id={item.id}
                 type="button"
                 variant="light"
                 value="delete"
@@ -248,7 +260,31 @@ class App extends React.Component {
   }
 
   handleClearList = () => {
-    console.log("clear all");
+    this.setState({ toDoItems: [] });
+  };
+
+  handleAdd = e => {
+    const { value } = e.target;
+    this.setState({ toAdd: value });
+  };
+
+  handleSubmit = e => {
+    // check for form validation
+    if (this.state.toAdd === "") {
+      return;
+    }
+    e.preventDefault();
+    // add item to ToDoItems eg. { id: 0, name: "Fix bugs", completed: false }
+    const item = {
+      id: this.idCount + 1,
+      name: this.state.toAdd,
+      completed: false
+    };
+    this.idCount = this.idCount + 1;
+    const list = [...this.state.toDoItems];
+    list.push(item);
+    this.setState({ toDoItems: list }, console.log(this.state.toDoItems));
+    this.setState({ toAdd: "" });
   };
 
   render() {
@@ -284,46 +320,16 @@ class App extends React.Component {
           handleStop={this.handleStop}
           handleReset={this.handleReset}
         />
-        <Row className="justify-content-center">
-          <Col>
-            To do list
-            <Form>
-              <ListGroup>{this.createLi()}</ListGroup>
-              <Button value="clear" onClick={this.handleClearList}>
-                Clear
-              </Button>
-            </Form>
-          </Col>
-        </Row>
+        <ToDoList
+          createLi={this.createLi()}
+          handleClearList={this.handleClearList}
+          toAdd={this.state.toAdd}
+          handleAdd={this.handleAdd}
+          handleSubmit={this.handleSubmit}
+        />
       </Container>
     );
   }
-}
-
-// logic for countdown
-function tick(duration, start) {
-  let diff = duration - (((Date.now() - start) / 1000) | 0);
-
-  let minutes = (diff / 60) | 0;
-  let seconds = diff % 60 | 0;
-
-  minutes = minutes < 10 ? "0" + minutes : minutes;
-  seconds = seconds < 10 ? "0" + seconds : seconds;
-
-  let display = minutes + ":" + seconds;
-
-  if (diff <= 0) {
-    start = Date.now() + 1000;
-  }
-  return display;
-}
-
-// convert string to number and then to seconds
-function toSeconds(time) {
-  const str = time.split(":");
-  const m = parseInt(str[0], 10);
-  const s = parseInt(str[1], 10);
-  return m * 60 + s;
 }
 
 export default App;

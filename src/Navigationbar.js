@@ -7,6 +7,7 @@ function Navigationbar(props) {
       variant="tabs"
       key={props.activeKeyInNav}
       defaultActiveKey={props.activeKeyInNav}
+	  onSelect={selectedKey => props.handleSelect(`${selectedKey}`)}
     >
       <Nav.Item>
         <Nav.Link eventKey="disabled" disabled>
@@ -14,7 +15,7 @@ function Navigationbar(props) {
         </Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link name="work" eventKey="work" onClick={props.handleSession}>
+        <Nav.Link name="work" eventKey="work">
           Work
         </Nav.Link>
       </Nav.Item>
@@ -22,7 +23,6 @@ function Navigationbar(props) {
         <Nav.Link
           name="shortBreak"
           eventKey="shortBreak"
-          onClick={props.handleSession}
         >
           Short break
         </Nav.Link>
@@ -31,7 +31,6 @@ function Navigationbar(props) {
         <Nav.Link
           name="longBreak"
           eventKey="longBreak"
-          onClick={props.handleSession}
         >
           Long break
         </Nav.Link>

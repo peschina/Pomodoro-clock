@@ -1,0 +1,29 @@
+:root {
+  --time: 0s;
+  --pauseHandler: paused;
+}
+
+svg {
+  width: 50px;
+  height: 50px;
+  transform: rotateY(-180deg) rotateZ(-90deg);
+}
+
+svg circle {
+  stroke-dasharray: 113px;
+  stroke-dashoffset: 0px;
+  stroke-linecap: round;
+  stroke-width: 3px;
+  stroke: black;
+  fill: none;
+  animation: countdown var(--time) linear infinite forwards var(--pauseHandler);
+}
+
+@keyframes countdown {
+  from {
+    stroke-dashoffset: 0px;
+  }
+  to {
+    stroke-dashoffset: 113px;
+  }
+}

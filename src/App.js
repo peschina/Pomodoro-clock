@@ -1,10 +1,11 @@
 import React from "react";
-import { Container, Row, Button, Col, ListGroup, Form } from "react-bootstrap";
+import { Container, Row, Button, Col, ListGroup } from "react-bootstrap";
 import Navigationbar from "./Navigationbar";
 import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
 import ToDoList from "./ToDoList";
 import { tick, toSeconds } from "./Utils";
+import "./styles.css";
 
 class App extends React.Component {
   constructor() {
@@ -55,13 +56,17 @@ class App extends React.Component {
   };
 
   updateStartTime = () => {
-    if (this.state.shortBreakRunning === true) {
+    if (this.state.sessionReady === "shortBreak") {
       this.setState({ startTime: this.state.shortBreakTime });
+      console.log("updated");
     }
-    if (this.state.longBreakRunning === true) {
+    if (this.state.sessionReady === "longBreak") {
       this.setState({ startTime: this.state.longBreakTime });
-    } else {
+      console.log("updated");
+    }
+    if (this.state.sessionReady === "work") {
       this.setState({ startTime: this.state.workTime });
+      console.log("updated");
     }
   };
 
@@ -74,10 +79,20 @@ class App extends React.Component {
     const session = this.state.sessionReady;
     const r = "Running";
     const sessionRunning = session + r;
-    this.setState({ startTime: this.state.currentTime });
+    this.setState({ startTime: this.state.currentTime }, () => {
+      console.log("current:" + this.state.currentTime);
+      console.log("start:" + this.state.startTime);
+    });
     // toggle session that is starting now
     this.setState({ [sessionRunning]: true, start: Date.now() });
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
+    // start svg timer
+    let circle = document.querySelector("circle");
+    const number = toSeconds(this.state.startTime);
+    const seconds = number + "s";
+    console.log(this.state.startTime);
+    circle.style.setProperty("--time", seconds);
+    circle.style.setProperty("--pauseHandler", "running");
   };
 
   setTimer = () => {
@@ -101,39 +116,20 @@ class App extends React.Component {
           const delay = this.state.lBDelay;
           const remainder = this.state.pomodorosCompleted % delay;
           if (remainder === 0) {
-            this.setState({
-              sessionReady: "longBreak",
-              workRunning: false,
-              longBreakRunning: true
-            });
+            this.handleSelect("longBreak");
           } else {
-            this.setState({
-              sessionReady: "shortBreak",
-              workRunning: false,
-              shortBreakRunning: true
-            });
+            this.handleSelect("shortBreak");
           }
           break;
         case "shortBreak":
-          this.setState({
-            sessionReady: "work",
-            shortBreakRunning: false,
-            workRunning: true
-          });
+          this.handleSelect("work");
           break;
         case "longBreak":
-          this.setState({
-            sessionReady: "work",
-            longBreakRunning: false,
-            workRunning: true
-          });
+          this.handleSelect("work");
           break;
       }
-      this.updateStartTime();
-      this.updateCurrentTime();
-      // when switching session need to set active class to the nav link
-      this.setState({ activeKey: this.state.sessionReady });
-      this.handleStart();
+      // give time to update svg circle css var
+      setTimeout(this.handleStart, 1);
     }
   };
 
@@ -145,6 +141,9 @@ class App extends React.Component {
     this.setState({ [sessionRunning]: false });
     let current = this.state.currentTime;
     this.setState({ startTime: current });
+    // pause svg timer
+    const circle = document.querySelector("circle");
+    circle.style.setProperty("--pauseHandler", "paused");
   };
 
   handleReset = () => {
@@ -158,6 +157,10 @@ class App extends React.Component {
     const time = this.state[sessionTime];
     this.setState({ currentTime: time });
     this.setState({ startTime: time });
+    // reset svg timer
+    let circle = document.querySelector("circle");
+    circle.style.setProperty("--time", "initial");
+    circle.style.setProperty("--pauseHandler", "paused");
   };
 
   handleChange = event => {
@@ -167,7 +170,9 @@ class App extends React.Component {
 
   // closes the modal for settings
   handleClose = () => {
-    this.setState({ showSettings: false }, () => this.updateCurrentTime());
+    this.setState({ showSettings: false }, () =>
+      alert("changes have been saved!")
+    );
   };
 
   handleShow = () => {
@@ -176,16 +181,16 @@ class App extends React.Component {
 
   // this method sets props in state so that the session is ready to start
   // the session doesn't start automatically, but only when Start button is clicked!
-  handleSession = e => {
-    const name = e.target.name;
-    this.setState({ sessionReady: name });
+  handleSelect = selected => {
+    console.log(selected);
+    this.setState({ sessionReady: selected });
     const t = "Time";
-    const n = name + t;
+    const n = selected + t;
     // sessionTime is the time duration of the session (ex 25 min)
     const sessionTime = this.state[n];
     const r = "Running";
     // sessionRunning is the prop in state that is toggled when timer starts
-    const sessionRunning = name + r;
+    const sessionRunning = selected + r;
     // check if session is already running. If yes display alert, if not update StartTime
     // so session is ready to start
     if (this.state[sessionRunning] === true) {
@@ -199,6 +204,12 @@ class App extends React.Component {
         shortBreakRunning: false,
         longBreakRunning: false
       });
+      // update activeKey
+      this.setState({ activeKey: selected });
+      // reset svg timer
+      let circle = document.querySelector("circle");
+      circle.style.setProperty("--time", "initial");
+      circle.style.setProperty("--pauseHandler", "paused");
     }
   };
 
@@ -234,23 +245,28 @@ class App extends React.Component {
         <ListGroup.Item key={item.id} style={style}>
           <Row>
             <Col>{name}</Col>
-            <Col xs={{ span: 2, offset: 7 }}>
-              <Form.Control
+            <Col>
+              <Button
                 data-id={item.id}
                 type="button"
                 variant="light"
                 value="completed"
                 onClick={this.toggleCompleted}
-              />
+              >
+                {"Completed "} <i className="fas fa-check" />
+              </Button>
             </Col>
             <Col>
-              <Form.Control
+              <Button
                 data-id={item.id}
                 type="button"
                 variant="light"
                 value="delete"
                 onClick={this.handleDeleteItem}
-              />
+              >
+                {"Delete "}
+                <i className="fas fa-trash-alt" />
+              </Button>
             </Col>
           </Row>
         </ListGroup.Item>
@@ -291,14 +307,13 @@ class App extends React.Component {
     return (
       <Container>
         <Navigationbar
-          handleSession={this.handleSession}
           handleSelect={this.handleSelect}
           activeKeyInNav={this.state.activeKey}
         />
         <Row className="mt-5 mb-5">
           <Col xs="1">
-            <Button variant="secondary" onClick={this.handleShow}>
-              Settings
+            <Button variant="light" onClick={this.handleShow}>
+              <i className="fas fa-cog fa-3x" />
             </Button>
             <ModalSettings
               show={this.state.showSettings}
@@ -310,8 +325,13 @@ class App extends React.Component {
               lBDelay={this.state.lBDelay}
             />
           </Col>
-          <Col md={{ span: 1, offset: 4 }}>{this.state.currentTime}</Col>
-          <Col md={{ span: 3, offset: 9 }}>
+          <Col xs={{ span: 1, offset: 4 }}>
+            {this.state.currentTime}
+            <svg>
+              <circle r="18" cx="20" cy="20" />
+            </svg>
+          </Col>
+          <Col xs={{ span: 3, offset: 9 }}>
             Pomodoros completed: {this.state.pomodorosCompleted}
           </Col>
         </Row>

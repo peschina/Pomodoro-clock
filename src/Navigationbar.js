@@ -7,7 +7,8 @@ function Navigationbar(props) {
       variant="tabs"
       key={props.activeKeyInNav}
       defaultActiveKey={props.activeKeyInNav}
-	  onSelect={selectedKey => props.handleSelect(`${selectedKey}`)}
+      className="justify-content-center"
+      onSelect={selectedKey => props.handleSelect(`${selectedKey}`)}
     >
       <Nav.Item>
         <Nav.Link eventKey="disabled" disabled>
@@ -20,18 +21,12 @@ function Navigationbar(props) {
         </Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link
-          name="shortBreak"
-          eventKey="shortBreak"
-        >
+        <Nav.Link name="shortBreak" eventKey="shortBreak">
           Short break
         </Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link
-          name="longBreak"
-          eventKey="longBreak"
-        >
+        <Nav.Link name="longBreak" eventKey="longBreak">
           Long break
         </Nav.Link>
       </Nav.Item>

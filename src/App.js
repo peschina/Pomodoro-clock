@@ -6,6 +6,8 @@ import ModalSettings from "./ModalSettings";
 import ToDoList from "./ToDoList";
 import { tick, toSeconds } from "./Utils";
 import "./styles.css";
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 
 class App extends React.Component {
   constructor() {
@@ -41,6 +43,7 @@ class App extends React.Component {
       ]
     };
     this.idCount = 3;
+    this.notificationDOMRef = React.createRef();
   }
 
   updateCurrentTime = () => {
@@ -58,31 +61,32 @@ class App extends React.Component {
   updateStartTime = () => {
     if (this.state.sessionReady === "shortBreak") {
       this.setState({ startTime: this.state.shortBreakTime });
-      console.log("updated");
     }
     if (this.state.sessionReady === "longBreak") {
       this.setState({ startTime: this.state.longBreakTime });
-      console.log("updated");
     }
     if (this.state.sessionReady === "work") {
       this.setState({ startTime: this.state.workTime });
-      console.log("updated");
     }
   };
 
   componentDidMount() {
     this.updateCurrentTime();
     this.updateStartTime();
+    let circle = document.querySelector("circle");
+    circle.style.setProperty("--time", "initial");
   }
 
   handleStart = () => {
     const session = this.state.sessionReady;
     const r = "Running";
     const sessionRunning = session + r;
-    this.setState({ startTime: this.state.currentTime }, () => {
-      console.log("current:" + this.state.currentTime);
-      console.log("start:" + this.state.startTime);
-    });
+    // disable button if session is already running
+    if (this.state[sessionRunning] == true) {
+      this.addNotification("session has already started", "warning");
+      return;
+    }
+    this.setState({ startTime: this.state.currentTime });
     // toggle session that is starting now
     this.setState({ [sessionRunning]: true, start: Date.now() });
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
@@ -90,7 +94,6 @@ class App extends React.Component {
     let circle = document.querySelector("circle");
     const number = toSeconds(this.state.startTime);
     const seconds = number + "s";
-    console.log(this.state.startTime);
     circle.style.setProperty("--time", seconds);
     circle.style.setProperty("--pauseHandler", "running");
   };
@@ -135,15 +138,19 @@ class App extends React.Component {
 
   handleStop = () => {
     clearInterval(this.state.timerId);
-    let sessionName = this.state.sessionReady;
-    let r = "Running";
-    let sessionRunning = sessionName + r;
-    this.setState({ [sessionRunning]: false });
-    let current = this.state.currentTime;
-    this.setState({ startTime: current });
     // pause svg timer
     const circle = document.querySelector("circle");
     circle.style.setProperty("--pauseHandler", "paused");
+    let sessionName = this.state.sessionReady;
+    let r = "Running";
+    let sessionRunning = sessionName + r;
+    if (this.state[sessionRunning] == false) {
+      this.addNotification("session isn't running", "warning");
+      return;
+    }
+    this.setState({ [sessionRunning]: false });
+    let current = this.state.currentTime;
+    this.setState({ startTime: current });
   };
 
   handleReset = () => {
@@ -170,19 +177,33 @@ class App extends React.Component {
 
   // closes the modal for settings
   handleClose = () => {
-    this.setState({ showSettings: false }, () =>
-      alert("changes have been saved!")
-    );
+    this.setState({ showSettings: false });
+    this.updateCurrentTime();
+    this.updateStartTime();
+    // trigger notification
+    this.addNotification("Changes have been saved!", "success");
   };
 
   handleShow = () => {
     this.setState({ showSettings: true });
   };
 
+  addNotification = (mess, typ) => {
+    this.notificationDOMRef.current.addNotification({
+      message: mess,
+      type: typ,
+      insert: "top",
+      container: "top-right",
+      animationIn: ["animated", "fadeIn"],
+      animationOut: ["animated", "fadeOut"],
+      dismiss: { duration: 5000 },
+      dismissable: { click: true }
+    });
+  };
+
   // this method sets props in state so that the session is ready to start
   // the session doesn't start automatically, but only when Start button is clicked!
   handleSelect = selected => {
-    console.log(selected);
     this.setState({ sessionReady: selected });
     const t = "Time";
     const n = selected + t;
@@ -191,10 +212,10 @@ class App extends React.Component {
     const r = "Running";
     // sessionRunning is the prop in state that is toggled when timer starts
     const sessionRunning = selected + r;
-    // check if session is already running. If yes display alert, if not update StartTime
+    // check if session is already running. If yes display notification, if not update StartTime
     // so session is ready to start
     if (this.state[sessionRunning] === true) {
-      alert("Session is already running");
+      this.addNotification("Session is already running", "warning");
     } else {
       clearInterval(this.state.timerId);
       this.setState({ startTime: sessionTime, currentTime: sessionTime });
@@ -215,15 +236,26 @@ class App extends React.Component {
 
   toggleCompleted = e => {
     const id = e.target.getAttribute("data-id");
-    const listUpdated = this.state.toDoItems.map(item => {
+    let list = this.state.toDoItems.map(item => {
       if (item.id == id) {
-        item.completed = true;
-        return item;
+        if (item.completed === true) {
+          this.addNotification("task has already been completed", "info");
+          return item;
+        } else {
+          item.completed = true;
+          return item;
+        }
       } else {
         return item;
       }
     });
-    this.setState({ toDoItems: listUpdated });
+    // Push item to end of array
+    for (let item of list) {
+      if (item.id == id) {
+        list.push(list.splice(list.indexOf(item), 1)[0]);
+      }
+    }
+    this.setState({ toDoItems: list });
   };
 
   handleDeleteItem = e => {
@@ -232,31 +264,49 @@ class App extends React.Component {
     this.setState({ toDoItems: filtered });
   };
 
+  handleRedo = name => {
+    // add item to ToDoItems eg. { id: 0, name: "Fix bugs", completed: false }
+    const item = {
+      id: this.idCount + 1,
+      name: name,
+      completed: false
+    };
+    this.idCount = this.idCount + 1;
+    const list = [...this.state.toDoItems];
+    list.unshift(item);
+    this.setState({ toDoItems: list });
+  };
+
   // for each ToDo Item return a li that displays the name of the item
   // and two inputs, one to mark the item as completed and one to delete the item
   createLi() {
     const list = this.state.toDoItems.map(item => {
       const name = item.name;
-      // THIS IS TEMPORARY
       let style = item.completed
-        ? { backgroundColor: "green" }
+        ? { textDecoration: "line-through", color: "#C8C8C8" }
         : { backgroundColor: "white" };
+      let buttonValue = item.completed ? "Redo " : "Done ";
+      let faClass = item.completed ? "fas fa-redo" : "fas fa-check";
+      let onClickFunction = item.completed
+        ? () => this.handleRedo(name)
+        : this.toggleCompleted;
       return (
         <ListGroup.Item key={item.id} style={style}>
           <Row>
-            <Col>{name}</Col>
-            <Col>
+            <Col sm="6">{name}</Col>
+            <Col sm="3">
               <Button
                 data-id={item.id}
                 type="button"
                 variant="light"
                 value="completed"
-                onClick={this.toggleCompleted}
+                onClick={onClickFunction}
               >
-                {"Completed "} <i className="fas fa-check" />
+                {buttonValue}
+                <i className={faClass} />
               </Button>
             </Col>
-            <Col>
+            <Col sm="3">
               <Button
                 data-id={item.id}
                 type="button"
@@ -264,6 +314,7 @@ class App extends React.Component {
                 value="delete"
                 onClick={this.handleDeleteItem}
               >
+                {" "}
                 {"Delete "}
                 <i className="fas fa-trash-alt" />
               </Button>
@@ -298,8 +349,8 @@ class App extends React.Component {
     };
     this.idCount = this.idCount + 1;
     const list = [...this.state.toDoItems];
-    list.push(item);
-    this.setState({ toDoItems: list }, console.log(this.state.toDoItems));
+    list.unshift(item);
+    this.setState({ toDoItems: list });
     this.setState({ toAdd: "" });
   };
 
@@ -310,36 +361,43 @@ class App extends React.Component {
           handleSelect={this.handleSelect}
           activeKeyInNav={this.state.activeKey}
         />
+        <ReactNotification ref={this.notificationDOMRef} />
         <Row className="mt-5 mb-5">
-          <Col xs="1">
-            <Button variant="light" onClick={this.handleShow}>
-              <i className="fas fa-cog fa-3x" />
-            </Button>
-            <ModalSettings
-              show={this.state.showSettings}
-              handleClose={this.handleClose}
-              handleChange={this.handleChange}
-              workTime={this.state.workTime}
-              shortBreakTime={this.state.shortBreakTime}
-              longBreakTime={this.state.longBreakTime}
-              lBDelay={this.state.lBDelay}
-            />
+          <Col>
+            <Row className="mb-3">
+              <Button onClick={this.handleShow}>
+                <i className="fas fa-cog fa-2x" />
+              </Button>
+              <ModalSettings
+                show={this.state.showSettings}
+                handleClose={this.handleClose}
+                handleChange={this.handleChange}
+                workTime={this.state.workTime}
+                shortBreakTime={this.state.shortBreakTime}
+                longBreakTime={this.state.longBreakTime}
+                lBDelay={this.state.lBDelay}
+              />
+            </Row>
+            <Row>
+              <span>Pomodoros completed: {this.state.pomodorosCompleted}</span>
+            </Row>
           </Col>
-          <Col xs={{ span: 1, offset: 4 }}>
-            {this.state.currentTime}
-            <svg>
-              <circle r="18" cx="20" cy="20" />
+          <Col>
+            <svg viewBox="0 0 100 100">
+              <circle r="40" cx="50" cy="50" />
+              <text transform="rotate(90) scale(-1,1) translate(-70,-45)">
+                {this.state.currentTime}
+              </text>
             </svg>
           </Col>
-          <Col xs={{ span: 3, offset: 9 }}>
-            Pomodoros completed: {this.state.pomodorosCompleted}
-          </Col>
+          <Col />
         </Row>
         <TimerControls
           handleStart={this.handleStart}
           handleStop={this.handleStop}
           handleReset={this.handleReset}
         />
+        <hr />
         <ToDoList
           createLi={this.createLi()}
           handleClearList={this.handleClearList}

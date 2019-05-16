@@ -4,13 +4,11 @@
 }
 
 svg {
-  width: 50px;
-  height: 50px;
   transform: rotateY(-180deg) rotateZ(-90deg);
 }
 
 svg circle {
-  stroke-dasharray: 113px;
+  stroke-dasharray: 251px;
   stroke-dashoffset: 0px;
   stroke-linecap: round;
   stroke-width: 3px;
@@ -18,12 +16,25 @@ svg circle {
   fill: none;
   animation: countdown var(--time) linear infinite forwards var(--pauseHandler);
 }
+svg text {
+  width: 50px;
+  height: 50px;
+}
 
 @keyframes countdown {
   from {
     stroke-dashoffset: 0px;
   }
   to {
-    stroke-dashoffset: 113px;
+    stroke-dashoffset: 251px;
   }
+}
+
+/* Gradient color1 - color2 - color1 */
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #333;
+  background-image: linear-gradient(to right, #ccc, #333, #ccc);
 }

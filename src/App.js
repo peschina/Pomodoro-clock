@@ -4,6 +4,7 @@ import Navigationbar from "./Navigationbar";
 import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
 import ToDoList from "./ToDoList";
+import Timer from "./Timer";
 import { tick, toSeconds } from "./Utils";
 import "./styles.css";
 import ReactNotification from "react-notifications-component";
@@ -33,6 +34,8 @@ class App extends React.Component {
       // displays modal when toggled
       showSettings: false,
       pomodorosCompleted: 0,
+      // to set the correct CSS variables for svg animation
+      animationWasPaused: false,
       activeKey: "work",
       toAdd: "",
       toDoItems: [
@@ -92,10 +95,15 @@ class App extends React.Component {
     this.setState({ timerId: setInterval(this.setTimer, 1000) });
     // start svg timer
     let circle = document.querySelector("circle");
-    const number = toSeconds(this.state.startTime);
-    const seconds = number + "s";
-    circle.style.setProperty("--time", seconds);
-    circle.style.setProperty("--pauseHandler", "running");
+    if (this.state.animationWasPaused === true) {
+      circle.style.setProperty("--pauseHandler", "running");
+      this.setState({ animationWasPaused: false });
+    } else {
+      const number = toSeconds(this.state.startTime);
+      const seconds = number + "s";
+      circle.style.setProperty("--time", seconds);
+      circle.style.setProperty("--pauseHandler", "running");
+    }
   };
 
   setTimer = () => {
@@ -131,7 +139,7 @@ class App extends React.Component {
           this.handleSelect("work");
           break;
       }
-      // give time to update svg circle css var
+      // give time to update svg circle CSS var
       setTimeout(this.handleStart, 1);
     }
   };
@@ -150,7 +158,7 @@ class App extends React.Component {
     }
     this.setState({ [sessionRunning]: false });
     let current = this.state.currentTime;
-    this.setState({ startTime: current });
+    this.setState({ startTime: current, animationWasPaused: true });
   };
 
   handleReset = () => {
@@ -188,6 +196,7 @@ class App extends React.Component {
     this.setState({ showSettings: true });
   };
 
+  // handles notification component
   addNotification = (mess, typ) => {
     this.notificationDOMRef.current.addNotification({
       message: mess,
@@ -314,7 +323,6 @@ class App extends React.Component {
                 value="delete"
                 onClick={this.handleDeleteItem}
               >
-                {" "}
                 {"Delete "}
                 <i className="fas fa-trash-alt" />
               </Button>
@@ -357,47 +365,31 @@ class App extends React.Component {
   render() {
     return (
       <Container>
+        <div className="bg" />
         <Navigationbar
           handleSelect={this.handleSelect}
           activeKeyInNav={this.state.activeKey}
+          handleShow={this.handleShow}
         />
         <ReactNotification ref={this.notificationDOMRef} />
-        <Row className="mt-5 mb-5">
-          <Col>
-            <Row className="mb-3">
-              <Button onClick={this.handleShow}>
-                <i className="fas fa-cog fa-2x" />
-              </Button>
-              <ModalSettings
-                show={this.state.showSettings}
-                handleClose={this.handleClose}
-                handleChange={this.handleChange}
-                workTime={this.state.workTime}
-                shortBreakTime={this.state.shortBreakTime}
-                longBreakTime={this.state.longBreakTime}
-                lBDelay={this.state.lBDelay}
-              />
-            </Row>
-            <Row>
-              <span>Pomodoros completed: {this.state.pomodorosCompleted}</span>
-            </Row>
-          </Col>
-          <Col>
-            <svg viewBox="0 0 100 100">
-              <circle r="40" cx="50" cy="50" />
-              <text transform="rotate(90) scale(-1,1) translate(-70,-45)">
-                {this.state.currentTime}
-              </text>
-            </svg>
-          </Col>
-          <Col />
-        </Row>
+        <ModalSettings
+          show={this.state.showSettings}
+          handleClose={this.handleClose}
+          handleChange={this.handleChange}
+          workTime={this.state.workTime}
+          shortBreakTime={this.state.shortBreakTime}
+          longBreakTime={this.state.longBreakTime}
+          lBDelay={this.state.lBDelay}
+        />
+        <Timer
+          currentTime={this.state.currentTime}
+          pomodorosCompleted={this.state.pomodorosCompleted}
+        />
         <TimerControls
           handleStart={this.handleStart}
           handleStop={this.handleStop}
           handleReset={this.handleReset}
         />
-        <hr />
         <ToDoList
           createLi={this.createLi()}
           handleClearList={this.handleClearList}

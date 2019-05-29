@@ -3,20 +3,44 @@ import { Row, Col, Button, Container } from "react-bootstrap";
 
 function TimerControls(props) {
   return (
-    <Container>
-      <Row className="justify-content-center mb-4">
+    <Container className="pb-5">
+      <Row className="justify-content-center ">
         <Col xs="auto">
-          <Button onClick={props.handleStart}>
+          <Button
+            onClick={props.handleStart}
+            className="rounded-pill"
+            style={{
+              background: "white",
+              color: "black",
+              border: "white"
+            }}
+          >
             {"Start "} <i className="fas fa-play" />
           </Button>
         </Col>
         <Col xs="auto">
-          <Button onClick={props.handleStop}>
+          <Button
+            onClick={props.handleStop}
+            className="rounded-pill"
+            style={{
+              background: "white",
+              color: "black",
+              border: "white"
+            }}
+          >
             {"Pause "} <i className="fas fa-pause" />
           </Button>
         </Col>
         <Col xs="auto">
-          <Button onClick={props.handleReset}>
+          <Button
+            onClick={props.handleReset}
+            className="rounded-pill"
+            style={{
+              background: "white",
+              color: "black",
+              border: "white"
+            }}
+          >
             {"Reset "} <i className="fas fa-stop" />
           </Button>
         </Col>

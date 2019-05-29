@@ -8,8 +8,8 @@ function ToDoList(props) {
         <Form.Label className="d-flex justify-content-center">
           TO DO LIST
         </Form.Label>
-        <Form.Row className="mb-3">
-          <Col xs={10}>
+        <Form.Row className="d-flex mb-3">
+          <Col>
             <Form.Control
               required
               type="text"
@@ -18,7 +18,7 @@ function ToDoList(props) {
               onChange={props.handleAdd}
             />
           </Col>
-          <Col xs={2}>
+          <Col>
             <Button type="submit" onClick={props.handleSubmit}>
               {"Add "}
               <i className="fas fa-plus" />

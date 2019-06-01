@@ -32,45 +32,41 @@ svg text {
 }
 
 .custom-btn {
-  background: #fff;
-  color: black;
-  padding: 5px 10px;
+  background: #9500ff;
+  color: white;
+  border-color: #9500ff;
 }
 
 .bg {
   position: absolute;
-  top: -40%;
-  left: -1rem;
-  width: 130%;
-  height: 124%;
-  -webkit-transform: rotate(-7deg);
-  -ms-transform: rotate(-7deg);
-  transform: rotate(-7deg);
-  border-bottom-left-radius: 3rem;
-  z-index: -2;
-  overflow: hidden;
-  background: linear-gradient(50deg, #6e00ff 0, #bb00ff 100%) !important;
-}
-
-/*.bg2 {
-  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 55%;
+  height: 49%;
   z-index: -2;
   background: linear-gradient(50deg, #6e00ff 0, #bb00ff 100%) !important;
 }
 
-.bgForSm {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 55%;
-  z-index: -2;
-  background: linear-gradient(50deg, #6e00ff 0, #bb00ff 100%) !important;
-} */
+@media and (min-width: 1000px) and (max-width: 1199px) {
+  /* For ipads*/
+  .bg {
+    height: 40%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .bg {
+    top: -40%;
+    left: -1rem;
+    width: 130%;
+    height: 132%;
+    -webkit-transform: rotate(-7deg);
+    -ms-transform: rotate(-7deg);
+    transform: rotate(-7deg);
+    border-bottom-left-radius: 3rem;
+    overflow: hidden;
+  }
+}
 
 .nav-pills .nav-link {
   color: white;

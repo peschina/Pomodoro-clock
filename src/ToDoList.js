@@ -3,13 +3,13 @@ import { Container, Form, ListGroup, Button, Row, Col } from "react-bootstrap";
 
 function ToDoList(props) {
   return (
-    <Container>
+    <Container className="pt-5">
       <Form>
-        <Form.Label className="d-flex justify-content-center">
+        <Form.Label className="d-flex justify-content-center my-3">
           TO DO LIST
         </Form.Label>
-        <Form.Row className="d-flex mb-3">
-          <Col>
+        <Form.Row className="d-flex flex-column flex-md-row flex-sm-row pt-3 pb-3">
+          <Col md={10} sm={9} className="pt-2">
             <Form.Control
               required
               type="text"
@@ -18,8 +18,12 @@ function ToDoList(props) {
               onChange={props.handleAdd}
             />
           </Col>
-          <Col>
-            <Button type="submit" onClick={props.handleSubmit}>
+          <Col md={2} sm={3} className="pt-2">
+            <Button
+              type="submit"
+              onClick={props.handleSubmit}
+              className="custom-btn btn-block rounded-pill"
+            >
               {"Add "}
               <i className="fas fa-plus" />
             </Button>
@@ -32,7 +36,11 @@ function ToDoList(props) {
         </Row>
         <Row className="justify-content-end">
           <Col xs="auto">
-            <Button value="clear" onClick={props.handleClearList}>
+            <Button
+              value="clear"
+              onClick={props.handleClearList}
+              className="custom-btn rounded-pill"
+            >
               {"Clear "}
               <i className="fas fa-eraser" />
             </Button>

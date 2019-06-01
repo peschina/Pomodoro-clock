@@ -1,5 +1,5 @@
 import React from "react";
-import { Nav, Col, Navbar } from "react-bootstrap";
+import { Nav, Navbar } from "react-bootstrap";
 import "./styles.css";
 
 function Navigationbar(props) {
@@ -11,7 +11,7 @@ function Navigationbar(props) {
         expand="lg"
         className="justify-content-between border-bottom"
       >
-        <Navbar.Brand href="#home">Pomi</Navbar.Brand>
+        <Navbar.Brand href="#home">Ticki</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse
           className="justify-content-end"

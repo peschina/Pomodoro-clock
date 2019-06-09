@@ -1,3 +1,6 @@
+import React from "react";
+import mp3_file from "./alarm.mp3";
+
 // logic for countdown
 export function tick(duration, start) {
   let diff = duration - (((Date.now() - start) / 1000) | 0);
@@ -22,4 +25,8 @@ export function toSeconds(time) {
   const m = parseInt(str[0], 10);
   const s = parseInt(str[1], 10);
   return m * 60 + s;
+}
+
+export function Audio() {
+  return <audio src={mp3_file} controls autoPlay />;
 }

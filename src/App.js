@@ -5,7 +5,8 @@ import TimerControls from "./TimerControls";
 import ModalSettings from "./ModalSettings";
 import ToDoList from "./ToDoList";
 import Timer from "./Timer";
-import { tick, toSeconds } from "./Utils";
+import ModalAbout from "./ModalAbout";
+import { tick, toSeconds, Audio } from "./Utils";
 import "./styles.css";
 import ReactNotification from "react-notifications-component";
 import "react-notifications-component/dist/theme.css";
@@ -18,12 +19,12 @@ class App extends React.Component {
       timerId: 0,
       start: 0,
       // this property is used by tick method
-      startTime: "00:25",
+      startTime: "25:00",
       // value displayed by timer
       currentTime: "",
-      workTime: "00:25",
-      shortBreakTime: "00:10",
-      longBreakTime: "00:30",
+      workTime: "25:00",
+      shortBreakTime: "10:00",
+      longBreakTime: "30:00",
       // how many pomodoros before long break
       lBDelay: 4,
       // session is Ready when startTime is updated
@@ -31,21 +32,24 @@ class App extends React.Component {
       workRunning: false,
       shortBreakRunning: false,
       longBreakRunning: false,
-      // displays modal when toggled
+      // displays modal for settings when toggled
       showSettings: false,
+      // displays modal for info when toggled
+      showAbout: false,
+      theme: "violet",
+      sound: "on",
       pomodorosCompleted: 0,
       // to set the correct CSS variables for svg animation
       animationWasPaused: false,
       activeKey: "work",
       toAdd: "",
       toDoItems: [
-        { id: 0, name: "Fix bugs", completed: false },
-        { id: 1, name: "Make laundry", completed: false },
-        { id: 2, name: "Buy groceries", completed: false },
-        { id: 3, name: "Call doctor", completed: false }
+        { id: 0, name: "Make laundry", completed: false },
+        { id: 1, name: "Buy groceries", completed: false },
+        { id: 2, name: "Call doctor", completed: false }
       ]
     };
-    this.idCount = 3;
+    this.idCount = 2;
     this.notificationDOMRef = React.createRef();
   }
 
@@ -71,6 +75,13 @@ class App extends React.Component {
     if (this.state.sessionReady === "work") {
       this.setState({ startTime: this.state.workTime });
     }
+  };
+
+  updateTheme = (theme, max, min) => {
+    let root = document.documentElement;
+    root.style.setProperty("--theme", theme);
+    root.style.setProperty("--bgMax", max);
+    root.style.setProperty("--bgMin", min);
   };
 
   componentDidMount() {
@@ -178,13 +189,28 @@ class App extends React.Component {
     circle.style.setProperty("--pauseHandler", "paused");
   };
 
-  handleChange = event => {
-    const { name, value } = event.target;
+  handleChange = e => {
+    const { name } = e.target;
+    let { value } = e.target;
+    let bgMax;
+    let bgMin;
+    if (name === "theme") {
+      // set values for background
+      bgMax = e.target.options[e.target.selectedIndex].dataset.max;
+      bgMin = e.target.options[e.target.selectedIndex].dataset.min;
+      this.updateTheme(value, bgMax, bgMin);
+      this.setState({ [name]: value });
+      return;
+    }
+    if (name === "sound" || name === "lBDelay") {
+    } else {
+      value = value < 10 ? "0" + value + ":00" : value + ":00";
+    }
     this.setState({ [name]: value });
   };
 
   // closes the modal for settings
-  handleClose = () => {
+  handleCloseSettings = () => {
     this.setState({ showSettings: false });
     this.updateCurrentTime();
     this.updateStartTime();
@@ -192,8 +218,16 @@ class App extends React.Component {
     this.addNotification("Changes have been saved!", "success");
   };
 
-  handleShow = () => {
+  handleShowSettings = () => {
     this.setState({ showSettings: true });
+  };
+
+  handleShowAbout = () => {
+    this.setState({ showAbout: true });
+  };
+
+  handleCloseAbout = () => {
+    this.setState({ showAbout: false });
   };
 
   // handles notification component
@@ -302,14 +336,20 @@ class App extends React.Component {
       return (
         <ListGroup.Item key={item.id} style={style}>
           <Row>
-            <Col sm="6">{name}</Col>
-            <Col sm="3">
+            <Col
+              sm="6"
+              className="d-flex align-items-center pb-2 pb-md-0 pb-sm-0"
+            >
+              {name}
+            </Col>
+            <Col sm="3" className="pb-2 pb-md-0 pb-sm-0">
               <Button
                 data-id={item.id}
                 type="button"
                 variant="light"
                 value="completed"
                 onClick={onClickFunction}
+                className="rounded-pill"
               >
                 {buttonValue}
                 <i className={faClass} />
@@ -322,6 +362,7 @@ class App extends React.Component {
                 variant="light"
                 value="delete"
                 onClick={this.handleDeleteItem}
+                className="rounded-pill"
               >
                 {"Delete "}
                 <i className="fas fa-trash-alt" />
@@ -362,42 +403,63 @@ class App extends React.Component {
     this.setState({ toAdd: "" });
   };
 
+  playSound = () => {
+    return <Audio />;
+  };
+
   render() {
     return (
-      <Container>
-        <div className="bg" />
-        <Navigationbar
-          handleSelect={this.handleSelect}
-          activeKeyInNav={this.state.activeKey}
-          handleShow={this.handleShow}
-        />
-        <ReactNotification ref={this.notificationDOMRef} />
-        <ModalSettings
-          show={this.state.showSettings}
-          handleClose={this.handleClose}
-          handleChange={this.handleChange}
-          workTime={this.state.workTime}
-          shortBreakTime={this.state.shortBreakTime}
-          longBreakTime={this.state.longBreakTime}
-          lBDelay={this.state.lBDelay}
-        />
-        <Timer
-          currentTime={this.state.currentTime}
-          pomodorosCompleted={this.state.pomodorosCompleted}
-        />
-        <TimerControls
-          handleStart={this.handleStart}
-          handleStop={this.handleStop}
-          handleReset={this.handleReset}
-        />
-        <ToDoList
-          createLi={this.createLi()}
-          handleClearList={this.handleClearList}
-          toAdd={this.state.toAdd}
-          handleAdd={this.handleAdd}
-          handleSubmit={this.handleSubmit}
-        />
-      </Container>
+      <div>
+        <div id="background">
+          <Container>
+            <div>
+              <Navigationbar
+                handleSelect={this.handleSelect}
+                activeKeyInNav={this.state.activeKey}
+                handleShow={this.handleShowSettings}
+                showAbout={this.handleShowAbout}
+              />
+              <ReactNotification ref={this.notificationDOMRef} />
+              <ModalSettings
+                show={this.state.showSettings}
+                handleClose={this.handleCloseSettings}
+                handleChange={this.handleChange}
+                workTime={this.state.workTime}
+                shortBreakTime={this.state.shortBreakTime}
+                longBreakTime={this.state.longBreakTime}
+                lBDelay={this.state.lBDelay}
+                theme={this.state.theme}
+                sound={this.state.sound}
+              />
+              <ModalAbout
+                show={this.state.showAbout}
+                handleClose={this.handleCloseAbout}
+              />
+              <Timer
+                currentTime={this.state.currentTime}
+                pomodorosCompleted={this.state.pomodorosCompleted}
+              />
+              <TimerControls
+                handleStart={this.handleStart}
+                handleStop={this.handleStop}
+                handleReset={this.handleReset}
+              />
+              <Button onClick={this.playSound}>Sound</Button>
+            </div>
+            <div id="backgroundLarge" />
+          </Container>
+        </div>
+        <Container>
+          <ToDoList
+            pomodorosCompleted={this.state.pomodorosCompleted}
+            createLi={this.createLi()}
+            handleClearList={this.handleClearList}
+            toAdd={this.state.toAdd}
+            handleAdd={this.handleAdd}
+            handleSubmit={this.handleSubmit}
+          />
+        </Container>
+      </div>
     );
   }
 }

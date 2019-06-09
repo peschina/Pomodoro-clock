@@ -18,7 +18,7 @@ function Navigationbar(props) {
           style={{ color: "white" }}
         >
           <Nav>
-            <Nav.Link href="#home">
+            <Nav.Link>
               {"Home "}
               <i className="fas fa-home" />
             </Nav.Link>
@@ -26,7 +26,10 @@ function Navigationbar(props) {
               {"Settings "}
               <i className="fas fa-cog" />
             </Nav.Link>
-            <Nav.Link href="#about">About</Nav.Link>
+            <Nav.Link onClick={props.showAbout} >
+			{"About "}
+			<i className="fas fa-question" />
+			</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Navbar>

@@ -1,7 +1,12 @@
 :root {
   --time: 0s;
   --pauseHandler: paused;
+  --theme: #9500ff;
+  --bgMax: #6e00ff;
+  --bgMin: #bb00ff;
 }
+
+/* for timer */
 
 svg {
   transform: rotateY(-180deg) rotateZ(-90deg);
@@ -31,42 +36,60 @@ svg text {
   }
 }
 
+hr {
+  border: 0;
+  height: 1px;
+  background: #333;
+  background-image: linear-gradient(to right, #ccc, #333, #ccc);
+}
+
 .custom-btn {
-  background: #9500ff;
+  background: var(--theme);
   color: white;
-  border-color: #9500ff;
+  border-color: var(--theme);
 }
 
-.bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 49%;
-  z-index: -2;
-  background: linear-gradient(50deg, #6e00ff 0, #bb00ff 100%) !important;
+.custom-btn:hover {
+  background: var(--theme);
+  color: white;
+  border-color: var(--theme);
 }
 
-@media and (min-width: 1000px) and (max-width: 1199px) {
-  /* For ipads*/
-  .bg {
-    height: 40%;
+/* App background */
+#background {
+  background: linear-gradient(50deg, var(--bgMax) 0, var(--bgMin) 100%);
+}
+
+@media screen and (min-width: 1200px) {
+  /* for large laptops and desktops */
+  #background {
+    background: transparent;
   }
 }
 
-@media (min-width: 1200px) {
-  .bg {
-    top: -40%;
+@media screen and (min-width: 1200px) {
+  /* for large laptops and desktops */
+  #backgroundLarge {
+    position: absolute;
+    top: -35%;
     left: -1rem;
     width: 130%;
-    height: 132%;
+    height: 135%;
+    z-index: -1;
     -webkit-transform: rotate(-7deg);
     -ms-transform: rotate(-7deg);
     transform: rotate(-7deg);
     border-bottom-left-radius: 3rem;
     overflow: hidden;
+    background: linear-gradient(
+      50deg,
+      var(--bgMax) 0,
+      var(--bgMin) 100%
+    ) !important;
   }
 }
+
+/* navigation bar */
 
 .nav-pills .nav-link {
   color: white;
@@ -75,4 +98,25 @@ svg text {
 .nav-pills .nav-link.active {
   color: black;
   background-color: white;
+}
+
+.navbar-brand {
+  font-family: Yellowtail, apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size: 37px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 38.5px;
+}
+
+/* Modal settings */
+
+.modal-header {
+  border-bottom: 1px solid var(--theme);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--theme);
 }

@@ -13,14 +13,7 @@ function Timer(props) {
           </text>
         </svg>
       </Col>
-      <Col>
-        <span
-          style={{ color: "white" }}
-          className="d-flex justify-content-center"
-        >
-          Pomodoros completed: {props.pomodorosCompleted}
-        </span>
-      </Col>
+      <Col />
     </Row>
   );
 }

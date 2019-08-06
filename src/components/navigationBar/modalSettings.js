@@ -1,9 +1,20 @@
 import React from "react";
 import { Modal, Form, Col, Row, Button } from "react-bootstrap";
+import themes from "../../themes";
 
-function ModalSettings(props) {
+function ModalSettings({
+  show,
+  workTime,
+  shortBreakTime,
+  longBreakTime,
+  lBDelay,
+  theme,
+  sound,
+  onClose,
+  onChange
+}) {
   return (
-    <Modal show={props.show} onHide={props.handleClose}>
+    <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
         <Modal.Title>Settings</Modal.Title>
       </Modal.Header>
@@ -19,34 +30,34 @@ function ModalSettings(props) {
             <Form.Label column sm="5">
               Work
             </Form.Label>
-            <Col sm="5" className="mb-md-2 mb-sm-2">
+            <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
                 name="workTime"
-                value={props.workTime.slice(0, -3)}
-                onChange={props.handleChange}
+                value={workTime.slice(0, -3)}
+                onChange={onChange}
               />
             </Col>
             <Form.Label column sm="5">
               Short break
             </Form.Label>
-            <Col sm="5" className="mb-md-2 mb-sm-2">
+            <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
-                onChange={props.handleChange}
                 name="shortBreakTime"
-                value={props.shortBreakTime.slice(0, -3)}
+                value={shortBreakTime.slice(0, -3)}
+                onChange={onChange}
               />
             </Col>
             <Form.Label column sm="5">
               Long break
             </Form.Label>
-            <Col sm="5" className="mb-md-2 mb-sm-2">
+            <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
-                onChange={props.handleChange}
                 name="longBreakTime"
-                value={props.longBreakTime.slice(0, -3)}
+                value={longBreakTime.slice(0, -3)}
+                onChange={onChange}
               />
             </Col>
             <Form.Label column sm="5">
@@ -55,50 +66,36 @@ function ModalSettings(props) {
             <Col sm="5">
               <Form.Control
                 type="number"
-                onChange={props.handleChange}
                 name="lBDelay"
-                value={props.lBDelay}
+                value={lBDelay}
+                onChange={onChange}
               />
             </Col>
           </Form.Group>
           <Form.Group as={Row} className="d-flex justify-content-center mt-4">
             <Form.Label
-              className="d-flex justify-content-center col-5 mb-md-2 mb-sm-2 py-2"
+              className="d-flex justify-content-center col-5 py-2"
               style={{ fontWeight: "500" }}
             >
               Choose theme
             </Form.Label>
             <Form.Control
               as="select"
+              className="col-5 mb-2"
               name="theme"
-              className="col-5 mb-md-2 mb-sm-2"
-              value={props.theme}
-              onChange={props.handleChange}
+              value={theme}
+              onChange={onChange}
             >
-              <option value="violet" data-max="#6e00ff" data-min="#bb00ff">
-                Violet
-              </option>
-              <option value="blue" data-max="#3030ff" data-min="#306eff">
-                Blue
-              </option>
-              <option value="green" data-max={"#208537"} data-min={"#28a745"}>
-                Green
-              </option>
-              <option value="orchid" data-max="#b241ce" data-min="#c269d8">
-                Orchid
-              </option>
-              <option value="turquoise" data-max="#00b5b8" data-min="#00e7eb">
-                Turquoise
-              </option>
-              <option value="dodgerBlue" data-max="#0483ff" data-min="#389dff">
-                Dodger blue
-              </option>
-              <option value="purple" data-max="#6a6ae2" data-min="#9494ea">
-                Purple
-              </option>
-              <option value="orange" data-max="#ff7f00" data-min="#ff9933">
-                Orange
-              </option>
+              {themes.map(theme => (
+                <option
+                  key={theme.color}
+                  value={theme.color}
+                  data-max={theme.dataMax}
+                  data-min={theme.dataMin}
+                >
+                  {theme.name}
+                </option>
+              ))}
             </Form.Control>
             <Col sm="1" />
           </Form.Group>
@@ -109,16 +106,34 @@ function ModalSettings(props) {
             >
               Sound
             </Form.Label>
-            <Form.Check inline label="on" type="radio" name="sound" value="on" checked={props.sound === "on"} onChange={props.handleChange} className="col-2" />
-            <Form.Check inline label="off" type="radio" name="sound" value="off" checked={props.sound === "off"} onChange={props.handleChange} className="col-2" />
+            <Form.Check
+              inline
+              className="col-2"
+              type="radio"
+              label="on"
+              name="sound"
+              value="on"
+              checked={sound === "on"}
+              onChange={onChange}
+            />
+            <Form.Check
+              inline
+              className="col-2"
+              type="radio"
+              label="off"
+              name="sound"
+              value="off"
+              checked={sound === "off"}
+              onChange={onChange}
+            />
           </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
         <Button
-          variant="secondary"
-          onClick={props.handleClose}
           className="rounded-pill custom-btn"
+          variant="secondary"
+          onClick={onClose}
         >
           Close
         </Button>

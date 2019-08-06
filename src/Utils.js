@@ -1,6 +1,3 @@
-import React from "react";
-import mp3_file from "./alarm.mp3";
-
 // logic for countdown
 export function tick(duration, start) {
   let diff = duration - (((Date.now() - start) / 1000) | 0);
@@ -13,9 +10,8 @@ export function tick(duration, start) {
 
   let display = minutes + ":" + seconds;
 
-  if (diff <= 0) {
-    start = Date.now() + 1000;
-  }
+  if (diff <= 0) start = Date.now() + 1000;
+
   return display;
 }
 
@@ -27,6 +23,9 @@ export function toSeconds(time) {
   return m * 60 + s;
 }
 
-export function Audio() {
-  return <audio src={mp3_file} controls autoPlay />;
+export function updateTheme(theme, max, min) {
+  let root = document.documentElement;
+  root.style.setProperty("--theme", theme);
+  root.style.setProperty("--bgMax", max);
+  root.style.setProperty("--bgMin", min);
 }

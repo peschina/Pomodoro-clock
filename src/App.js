@@ -1,15 +1,15 @@
 import React from "react";
-import { Container, Row, Button, Col, ListGroup } from "react-bootstrap";
-import Navigationbar from "./Navigationbar";
-import TimerControls from "./TimerControls";
-import ModalSettings from "./ModalSettings";
-import ToDoList from "./ToDoList";
-import Timer from "./Timer";
-import ModalAbout from "./ModalAbout";
-import { tick, toSeconds, Audio } from "./Utils";
-import "./styles.css";
+import { Container } from "react-bootstrap";
 import ReactNotification from "react-notifications-component";
+import UIfx from "uifx";
+import Navigationbar from "./components/navigationBar/navigationbar";
+import TimerControls from "./components/timer/timerControls";
+import ToDoListForm from "./components/toDoList/toDoList";
+import Timer from "./components/timer/timer";
+import { tick, toSeconds, updateTheme } from "./utils";
+import "./styles.css";
 import "react-notifications-component/dist/theme.css";
+import alarm from "./alarm.mp3";
 
 class App extends React.Component {
   constructor() {
@@ -23,66 +23,23 @@ class App extends React.Component {
       // value displayed by timer
       currentTime: "",
       workTime: "25:00",
-      shortBreakTime: "10:00",
+      shortBreakTime: "05:00",
       longBreakTime: "30:00",
       // how many pomodoros before long break
       lBDelay: 4,
+      pomodorosCompleted: 0,
       // session is Ready when startTime is updated
       sessionReady: "work",
-      workRunning: false,
-      shortBreakRunning: false,
-      longBreakRunning: false,
+      sessionRunning: "",
+      activeKey: "work",
       // displays modal for settings when toggled
-      showSettings: false,
-      // displays modal for info when toggled
-      showAbout: false,
       theme: "violet",
       sound: "on",
-      pomodorosCompleted: 0,
       // to set the correct CSS variables for svg animation
-      animationWasPaused: false,
-      activeKey: "work",
-      toAdd: "",
-      toDoItems: [
-        { id: 0, name: "Make laundry", completed: false },
-        { id: 1, name: "Buy groceries", completed: false },
-        { id: 2, name: "Call doctor", completed: false }
-      ]
+      animationWasPaused: false
     };
-    this.idCount = 2;
     this.notificationDOMRef = React.createRef();
   }
-
-  updateCurrentTime = () => {
-    if (this.state.sessionReady === "shortBreak") {
-      this.setState({ currentTime: this.state.shortBreakTime });
-    }
-    if (this.state.sessionReady === "longBreak") {
-      this.setState({ currentTime: this.state.longBreakTime });
-    }
-    if (this.state.sessionReady === "work") {
-      this.setState({ currentTime: this.state.workTime });
-    }
-  };
-
-  updateStartTime = () => {
-    if (this.state.sessionReady === "shortBreak") {
-      this.setState({ startTime: this.state.shortBreakTime });
-    }
-    if (this.state.sessionReady === "longBreak") {
-      this.setState({ startTime: this.state.longBreakTime });
-    }
-    if (this.state.sessionReady === "work") {
-      this.setState({ startTime: this.state.workTime });
-    }
-  };
-
-  updateTheme = (theme, max, min) => {
-    let root = document.documentElement;
-    root.style.setProperty("--theme", theme);
-    root.style.setProperty("--bgMax", max);
-    root.style.setProperty("--bgMin", min);
-  };
 
   componentDidMount() {
     this.updateCurrentTime();
@@ -91,64 +48,76 @@ class App extends React.Component {
     circle.style.setProperty("--time", "initial");
   }
 
+  updateCurrentTime = () => {
+    this.setState({
+      currentTime: this.state[`${this.state.sessionReady}Time`]
+    });
+  };
+
+  updateStartTime = () => {
+    this.setState({ startTime: this.state.sessionReady });
+  };
+
   handleStart = () => {
-    const session = this.state.sessionReady;
-    const r = "Running";
-    const sessionRunning = session + r;
+    const {
+      sessionRunning,
+      sessionReady,
+      currentTime,
+      startTime,
+      animationWasPaused
+    } = this.state;
     // disable button if session is already running
-    if (this.state[sessionRunning] == true) {
+    if (sessionRunning) {
       this.addNotification("session has already started", "warning");
       return;
     }
-    this.setState({ startTime: this.state.currentTime });
+    this.setState({ sessionRunning: sessionReady, startTime: currentTime });
     // toggle session that is starting now
-    this.setState({ [sessionRunning]: true, start: Date.now() });
-    this.setState({ timerId: setInterval(this.setTimer, 1000) });
+    this.setState({
+      start: Date.now(),
+      timerId: setInterval(this.setTimer, 1000)
+    });
     // start svg timer
     let circle = document.querySelector("circle");
-    if (this.state.animationWasPaused === true) {
+    if (animationWasPaused) {
       circle.style.setProperty("--pauseHandler", "running");
       this.setState({ animationWasPaused: false });
-    } else {
-      const number = toSeconds(this.state.startTime);
-      const seconds = number + "s";
-      circle.style.setProperty("--time", seconds);
-      circle.style.setProperty("--pauseHandler", "running");
+      return;
     }
+    const seconds = `${toSeconds(startTime)}s`;
+    circle.style.setProperty("--time", seconds);
+    circle.style.setProperty("--pauseHandler", "running");
   };
 
   setTimer = () => {
-    let time = this.state.startTime;
+    const {
+      startTime,
+      start,
+      currentTime,
+      timerId,
+      sessionReady,
+      pomodorosCompleted,
+      lBDelay
+    } = this.state;
     // convert string to number and then to seconds
-    let duration = toSeconds(time);
-    let start = this.state.start;
+    let duration = toSeconds(startTime);
     let display = tick(duration, start);
-    console.log(display);
     this.setState({ currentTime: display });
 
-    if (this.state.currentTime === "00:00") {
-      clearInterval(this.state.timerId);
+    if (currentTime === "00:00") {
+      clearInterval(timerId);
+      this.alarm.play();
+      this.setState({ sessionRunning: "" });
       // according to session that just finished update props in state and start new session
-      switch (this.state.sessionReady) {
-        case "work":
-          let counter = this.state.pomodorosCompleted;
-          const count = counter + 1;
-          this.setState({ pomodorosCompleted: count });
-          // check if we already have n pomodoros completed and need to switch to long break
-          const delay = this.state.lBDelay;
-          const remainder = this.state.pomodorosCompleted % delay;
-          if (remainder === 0) {
-            this.handleSelect("longBreak");
-          } else {
-            this.handleSelect("shortBreak");
-          }
-          break;
-        case "shortBreak":
-          this.handleSelect("work");
-          break;
-        case "longBreak":
-          this.handleSelect("work");
-          break;
+      if (sessionReady === "work") {
+        // check if we already have n pomodoros completed and need to switch to long break
+        this.setState({ pomodorosCompleted: pomodorosCompleted + 1 });
+        const remainder = (pomodorosCompleted + 1) % lBDelay;
+        remainder === 0
+          ? this.handleSelect("longBreak")
+          : this.handleSelect("shortBreak");
+      } else {
+        this.handleSelect("work");
       }
       // give time to update svg circle CSS var
       setTimeout(this.handleStart, 1);
@@ -156,78 +125,57 @@ class App extends React.Component {
   };
 
   handleStop = () => {
-    clearInterval(this.state.timerId);
-    // pause svg timer
-    const circle = document.querySelector("circle");
-    circle.style.setProperty("--pauseHandler", "paused");
-    let sessionName = this.state.sessionReady;
-    let r = "Running";
-    let sessionRunning = sessionName + r;
-    if (this.state[sessionRunning] == false) {
+    let { sessionRunning, timerId, currentTime } = this.state;
+    if (!sessionRunning) {
       this.addNotification("session isn't running", "warning");
       return;
     }
-    this.setState({ [sessionRunning]: false });
-    let current = this.state.currentTime;
-    this.setState({ startTime: current, animationWasPaused: true });
+    clearInterval(timerId);
+    // pause svg timer
+    const circle = document.querySelector("circle");
+    circle.style.setProperty("--pauseHandler", "paused");
+    this.setState({
+      sessionRunning: "",
+      startTime: currentTime,
+      animationWasPaused: true
+    });
   };
 
   handleReset = () => {
-    clearInterval(this.state.timerId);
-    const session = this.state.sessionReady;
-    const r = "Running";
-    const sessionRunning = session + r;
-    this.setState({ [sessionRunning]: false });
-    const t = "Time";
-    const sessionTime = session + t;
-    const time = this.state[sessionTime];
-    this.setState({ currentTime: time });
-    this.setState({ startTime: time });
+    const { sessionRunning, timerId } = this.state;
+    if (!sessionRunning) {
+      this.addNotification("session isn't running", "warning");
+      return;
+    }
+    clearInterval(timerId);
+    const sessionTime = this.state[`${sessionRunning}Time`];
+    this.setState({
+      sessionRunning: "",
+      currentTime: sessionTime,
+      startTime: sessionTime
+    });
     // reset svg timer
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
     circle.style.setProperty("--pauseHandler", "paused");
   };
 
-  handleChange = e => {
-    const { name } = e.target;
-    let { value } = e.target;
+  handleChange = ({ target }) => {
+    const { name } = target;
+    let { value } = target;
     let bgMax;
     let bgMin;
+    this.setState({ [name]: value });
     if (name === "theme") {
       // set values for background
-      bgMax = e.target.options[e.target.selectedIndex].dataset.max;
-      bgMin = e.target.options[e.target.selectedIndex].dataset.min;
-      this.updateTheme(value, bgMax, bgMin);
-      this.setState({ [name]: value });
+      bgMax = target.options[target.selectedIndex].dataset.max;
+      bgMin = target.options[target.selectedIndex].dataset.min;
+      updateTheme(value, bgMax, bgMin);
       return;
     }
-    if (name === "sound" || name === "lBDelay") {
-    } else {
-      value = value < 10 ? "0" + value + ":00" : value + ":00";
-    }
+    if (name === "sound" || name === "lBDelay") return;
+    value = value < 10 ? "0" + value + ":00" : value + ":00";
     this.setState({ [name]: value });
-  };
-
-  // closes the modal for settings
-  handleCloseSettings = () => {
-    this.setState({ showSettings: false });
-    this.updateCurrentTime();
-    this.updateStartTime();
-    // trigger notification
-    this.addNotification("Changes have been saved!", "success");
-  };
-
-  handleShowSettings = () => {
-    this.setState({ showSettings: true });
-  };
-
-  handleShowAbout = () => {
-    this.setState({ showAbout: true });
-  };
-
-  handleCloseAbout = () => {
-    this.setState({ showAbout: false });
   };
 
   // handles notification component
@@ -247,219 +195,100 @@ class App extends React.Component {
   // this method sets props in state so that the session is ready to start
   // the session doesn't start automatically, but only when Start button is clicked!
   handleSelect = selected => {
+    const { sessionRunning, timerId } = this.state;
     this.setState({ sessionReady: selected });
-    const t = "Time";
-    const n = selected + t;
     // sessionTime is the time duration of the session (ex 25 min)
-    const sessionTime = this.state[n];
-    const r = "Running";
+    const sessionTime = this.state[`${selected}Time`];
     // sessionRunning is the prop in state that is toggled when timer starts
-    const sessionRunning = selected + r;
-    // check if session is already running. If yes display notification, if not update StartTime
-    // so session is ready to start
-    if (this.state[sessionRunning] === true) {
+    // check if session is already running. If yes display notification, if not update StartTime so session is ready to start
+    if (sessionRunning === selected) {
       this.addNotification("Session is already running", "warning");
-    } else {
-      clearInterval(this.state.timerId);
-      this.setState({ startTime: sessionTime, currentTime: sessionTime });
-      // Toggle all sessions to false
-      this.setState({
-        workRunning: false,
-        shortBreakRunning: false,
-        longBreakRunning: false
-      });
-      // update activeKey
-      this.setState({ activeKey: selected });
-      // reset svg timer
-      let circle = document.querySelector("circle");
-      circle.style.setProperty("--time", "initial");
-      circle.style.setProperty("--pauseHandler", "paused");
-    }
-  };
-
-  toggleCompleted = e => {
-    const id = e.target.getAttribute("data-id");
-    let list = this.state.toDoItems.map(item => {
-      if (item.id == id) {
-        if (item.completed === true) {
-          this.addNotification("task has already been completed", "info");
-          return item;
-        } else {
-          item.completed = true;
-          return item;
-        }
-      } else {
-        return item;
-      }
-    });
-    // Push item to end of array
-    for (let item of list) {
-      if (item.id == id) {
-        list.push(list.splice(list.indexOf(item), 1)[0]);
-      }
-    }
-    this.setState({ toDoItems: list });
-  };
-
-  handleDeleteItem = e => {
-    const id = e.target.getAttribute("data-id");
-    const filtered = this.state.toDoItems.filter(item => item.id != id);
-    this.setState({ toDoItems: filtered });
-  };
-
-  handleRedo = name => {
-    // add item to ToDoItems eg. { id: 0, name: "Fix bugs", completed: false }
-    const item = {
-      id: this.idCount + 1,
-      name: name,
-      completed: false
-    };
-    this.idCount = this.idCount + 1;
-    const list = [...this.state.toDoItems];
-    list.unshift(item);
-    this.setState({ toDoItems: list });
-  };
-
-  // for each ToDo Item return a li that displays the name of the item
-  // and two inputs, one to mark the item as completed and one to delete the item
-  createLi() {
-    const list = this.state.toDoItems.map(item => {
-      const name = item.name;
-      let style = item.completed
-        ? { textDecoration: "line-through", color: "#C8C8C8" }
-        : { backgroundColor: "white" };
-      let buttonValue = item.completed ? "Redo " : "Done ";
-      let faClass = item.completed ? "fas fa-redo" : "fas fa-check";
-      let onClickFunction = item.completed
-        ? () => this.handleRedo(name)
-        : this.toggleCompleted;
-      return (
-        <ListGroup.Item key={item.id} style={style}>
-          <Row>
-            <Col
-              sm="6"
-              className="d-flex align-items-center pb-2 pb-md-0 pb-sm-0"
-            >
-              {name}
-            </Col>
-            <Col sm="3" className="pb-2 pb-md-0 pb-sm-0">
-              <Button
-                data-id={item.id}
-                type="button"
-                variant="light"
-                value="completed"
-                onClick={onClickFunction}
-                className="rounded-pill"
-              >
-                {buttonValue}
-                <i className={faClass} />
-              </Button>
-            </Col>
-            <Col sm="3">
-              <Button
-                data-id={item.id}
-                type="button"
-                variant="light"
-                value="delete"
-                onClick={this.handleDeleteItem}
-                className="rounded-pill"
-              >
-                {"Delete "}
-                <i className="fas fa-trash-alt" />
-              </Button>
-            </Col>
-          </Row>
-        </ListGroup.Item>
-      );
-    });
-    return list;
-  }
-
-  handleClearList = () => {
-    this.setState({ toDoItems: [] });
-  };
-
-  handleAdd = e => {
-    const { value } = e.target;
-    this.setState({ toAdd: value });
-  };
-
-  handleSubmit = e => {
-    // check for form validation
-    if (this.state.toAdd === "") {
       return;
     }
-    e.preventDefault();
-    // add item to ToDoItems eg. { id: 0, name: "Fix bugs", completed: false }
-    const item = {
-      id: this.idCount + 1,
-      name: this.state.toAdd,
-      completed: false
-    };
-    this.idCount = this.idCount + 1;
-    const list = [...this.state.toDoItems];
-    list.unshift(item);
-    this.setState({ toDoItems: list });
-    this.setState({ toAdd: "" });
+    clearInterval(timerId);
+    // update state so new session is ready to start
+    this.setState({
+      sessionRunning: "",
+      startTime: sessionTime,
+      currentTime: sessionTime
+    });
+    // update activeKey
+    this.setState({ activeKey: selected });
+    // reset svg timer
+    let circle = document.querySelector("circle");
+    circle.style.setProperty("--time", "initial");
+    circle.style.setProperty("--pauseHandler", "paused");
   };
 
-  playSound = () => {
-    return <Audio />;
+  saveChangesInSettings = () => {
+    this.updateCurrentTime();
+    this.updateStartTime();
+    // trigger notification
+    this.addNotification("Changes have been saved!", "success");
   };
+
+  progressTracker = () => {
+    return (
+      <span className="d-flex justify-content-center pb-5">
+        {`You have completed ${this.state.pomodorosCompleted} pomodoros`}
+      </span>
+    );
+  };
+
+  alarm = new UIfx({
+    asset: alarm,
+    volume: 0.4
+  });
 
   render() {
+    const {
+      workTime,
+      shortBreakTime,
+      longBreakTime,
+      currentTime,
+      activeKey,
+      lBDelay,
+      pomodorosCompleted,
+      theme,
+      sound
+    } = this.state;
     return (
-      <div>
+      <React.Fragment>
         <div id="background">
           <Container>
             <div>
               <Navigationbar
-                handleSelect={this.handleSelect}
-                activeKeyInNav={this.state.activeKey}
-                handleShow={this.handleShowSettings}
-                showAbout={this.handleShowAbout}
+                activeKeyInNav={activeKey}
+                workTime={workTime}
+                shortBreakTime={shortBreakTime}
+                longBreakTime={longBreakTime}
+                lBDelay={lBDelay}
+                theme={theme}
+                sound={sound}
+                saveChanges={this.saveChangesInSettings}
+                onChange={this.handleChange}
+                onSelect={this.handleSelect}
               />
               <ReactNotification ref={this.notificationDOMRef} />
-              <ModalSettings
-                show={this.state.showSettings}
-                handleClose={this.handleCloseSettings}
-                handleChange={this.handleChange}
-                workTime={this.state.workTime}
-                shortBreakTime={this.state.shortBreakTime}
-                longBreakTime={this.state.longBreakTime}
-                lBDelay={this.state.lBDelay}
-                theme={this.state.theme}
-                sound={this.state.sound}
-              />
-              <ModalAbout
-                show={this.state.showAbout}
-                handleClose={this.handleCloseAbout}
-              />
               <Timer
-                currentTime={this.state.currentTime}
-                pomodorosCompleted={this.state.pomodorosCompleted}
+                currentTime={currentTime}
+                pomodorosCompleted={pomodorosCompleted}
               />
               <TimerControls
-                handleStart={this.handleStart}
-                handleStop={this.handleStop}
-                handleReset={this.handleReset}
+                onStart={this.handleStart}
+                onStop={this.handleStop}
+                onReset={this.handleReset}
               />
-              <Button onClick={this.playSound}>Sound</Button>
             </div>
             <div id="backgroundLarge" />
           </Container>
         </div>
         <Container>
-          <ToDoList
-            pomodorosCompleted={this.state.pomodorosCompleted}
-            createLi={this.createLi()}
-            handleClearList={this.handleClearList}
-            toAdd={this.state.toAdd}
-            handleAdd={this.handleAdd}
-            handleSubmit={this.handleSubmit}
-          />
+          <ToDoListForm />
+          <hr />
+          {this.progressTracker()}
         </Container>
-      </div>
+      </React.Fragment>
     );
   }
 }

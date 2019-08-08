@@ -23,8 +23,11 @@ class Navigationbar extends Component {
 
   // closes the modal for settings
   handleCloseSettings = () => {
+    const { validateForm, saveChanges } = this.props;
+    const errors = validateForm();
+    if (errors) return;
     this.setState({ showSettings: false });
-    this.props.saveChanges();
+    saveChanges();
   };
 
   renderNavItem = (name, label) => {

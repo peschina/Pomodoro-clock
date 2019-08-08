@@ -1,6 +1,7 @@
 import React from "react";
 import { Container } from "react-bootstrap";
 import ReactNotification from "react-notifications-component";
+import Joi from "joi-browser";
 import UIfx from "uifx";
 import Navigationbar from "./components/navigationBar/navigationbar";
 import TimerControls from "./components/timer/timerControls";
@@ -19,12 +20,12 @@ class App extends React.Component {
       timerId: 0,
       start: 0,
       // this property is used by tick method
-      startTime: "25:00",
+      startTime: "25",
       // value displayed by timer
       currentTime: "",
-      workTime: "25:00",
-      shortBreakTime: "05:00",
-      longBreakTime: "30:00",
+      workTime: "25",
+      shortBreakTime: "5",
+      longBreakTime: "30",
       // how many pomodoros before long break
       lBDelay: 4,
       pomodorosCompleted: 0,
@@ -36,33 +37,46 @@ class App extends React.Component {
       theme: "violet",
       sound: "on",
       // to set the correct CSS variables for svg animation
-      animationWasPaused: false
+      animationWasPaused: false,
+      errors: {}
     };
     this.notificationDOMRef = React.createRef();
   }
 
   componentDidMount() {
-    this.updateCurrentTime();
-    this.updateStartTime();
+    this.prepareNewSession();
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
   }
 
-  updateCurrentTime = () => {
-    this.setState({
-      currentTime: this.state[`${this.state.sessionReady}Time`]
+  // handles notification component
+  addNotification = (mess, typ) => {
+    this.notificationDOMRef.current.addNotification({
+      message: mess,
+      type: typ,
+      insert: "top",
+      container: "top-right",
+      animationIn: ["animated", "fadeIn"],
+      animationOut: ["animated", "fadeOut"],
+      dismiss: { duration: 5000 },
+      dismissable: { click: true }
     });
   };
 
-  updateStartTime = () => {
-    this.setState({ startTime: this.state.sessionReady });
+  prepareNewSession = () => {
+    const val = this.state[`${this.state.sessionReady}Time`];
+    const time = val < 10 ? `0${val}:00` : `${val}:00`;
+    this.setState({
+      sessionRunning: "",
+      startTime: time,
+      currentTime: time
+    });
   };
 
   handleStart = () => {
     const {
       sessionRunning,
       sessionReady,
-      currentTime,
       startTime,
       animationWasPaused
     } = this.state;
@@ -71,7 +85,7 @@ class App extends React.Component {
       this.addNotification("session has already started", "warning");
       return;
     }
-    this.setState({ sessionRunning: sessionReady, startTime: currentTime });
+    this.setState({ sessionRunning: sessionReady });
     // toggle session that is starting now
     this.setState({
       start: Date.now(),
@@ -107,7 +121,6 @@ class App extends React.Component {
     if (currentTime === "00:00") {
       clearInterval(timerId);
       this.alarm.play();
-      this.setState({ sessionRunning: "" });
       // according to session that just finished update props in state and start new session
       if (sessionReady === "work") {
         // check if we already have n pomodoros completed and need to switch to long break
@@ -148,12 +161,7 @@ class App extends React.Component {
       return;
     }
     clearInterval(timerId);
-    const sessionTime = this.state[`${sessionRunning}Time`];
-    this.setState({
-      sessionRunning: "",
-      currentTime: sessionTime,
-      startTime: sessionTime
-    });
+    this.prepareNewSession();
     // reset svg timer
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
@@ -166,6 +174,15 @@ class App extends React.Component {
     let bgMax;
     let bgMin;
     this.setState({ [name]: value });
+    if (value === "0") {
+      if (name === "lBDelay") return;
+      this.addNotification(
+        "Session should last at least one minute",
+        "warning"
+      );
+      setTimeout(() => this.setState({ [name]: 1 }), 800);
+      return;
+    }
     if (name === "theme") {
       // set values for background
       bgMax = target.options[target.selectedIndex].dataset.max;
@@ -173,45 +190,24 @@ class App extends React.Component {
       updateTheme(value, bgMax, bgMin);
       return;
     }
-    if (name === "sound" || name === "lBDelay") return;
-    value = value < 10 ? "0" + value + ":00" : value + ":00";
-    this.setState({ [name]: value });
-  };
-
-  // handles notification component
-  addNotification = (mess, typ) => {
-    this.notificationDOMRef.current.addNotification({
-      message: mess,
-      type: typ,
-      insert: "top",
-      container: "top-right",
-      animationIn: ["animated", "fadeIn"],
-      animationOut: ["animated", "fadeOut"],
-      dismiss: { duration: 5000 },
-      dismissable: { click: true }
-    });
   };
 
   // this method sets props in state so that the session is ready to start
   // the session doesn't start automatically, but only when Start button is clicked!
   handleSelect = selected => {
     const { sessionRunning, timerId } = this.state;
-    this.setState({ sessionReady: selected });
-    // sessionTime is the time duration of the session (ex 25 min)
-    const sessionTime = this.state[`${selected}Time`];
-    // sessionRunning is the prop in state that is toggled when timer starts
-    // check if session is already running. If yes display notification, if not update StartTime so session is ready to start
+    // check if session is already running. If yes display notification, if not update state so session is ready to start
     if (sessionRunning === selected) {
       this.addNotification("Session is already running", "warning");
       return;
     }
+    this.setState(
+      {
+        sessionReady: selected
+      },
+      () => this.prepareNewSession()
+    );
     clearInterval(timerId);
-    // update state so new session is ready to start
-    this.setState({
-      sessionRunning: "",
-      startTime: sessionTime,
-      currentTime: sessionTime
-    });
     // update activeKey
     this.setState({ activeKey: selected });
     // reset svg timer
@@ -220,9 +216,58 @@ class App extends React.Component {
     circle.style.setProperty("--pauseHandler", "paused");
   };
 
+  schema = {
+    workTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for work"),
+    shortBreakTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for short break"),
+    longBreakTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for long break"),
+    lBDelay: Joi.number()
+      .required()
+      .label("Long break delay")
+  };
+
+  validateForm = () => {
+    const errors = this.validate();
+
+    this.setState({ errors: errors ? errors : {} }, () => {
+      const messages = Object.values(this.state.errors);
+      messages.map(m => this.addNotification(m, "danger"));
+    });
+
+    return errors;
+  };
+
+  validate = () => {
+    const { error } = Joi.validate(
+      {
+        workTime: this.state.workTime,
+        shortBreakTime: this.state.shortBreakTime,
+        longBreakTime: this.state.longBreakTime,
+        lBDelay: this.state.lBDelay
+      },
+      this.schema,
+      {
+        abortEarly: false
+      }
+    );
+    if (!error) return null;
+    let errors = {};
+    error.details.map(i => {
+      errors[i.path[0]] = i.message;
+    });
+    return errors;
+  };
+
   saveChangesInSettings = () => {
-    this.updateCurrentTime();
-    this.updateStartTime();
+    this.prepareNewSession();
     // trigger notification
     this.addNotification("Changes have been saved!", "success");
   };
@@ -266,6 +311,7 @@ class App extends React.Component {
                 theme={theme}
                 sound={sound}
                 saveChanges={this.saveChangesInSettings}
+                validateForm={this.validateForm}
                 onChange={this.handleChange}
                 onSelect={this.handleSelect}
               />
@@ -283,7 +329,7 @@ class App extends React.Component {
             <div id="backgroundLarge" />
           </Container>
         </div>
-        <Container>
+        <Container className="pt-4">
           <ToDoListForm />
           <hr />
           {this.progressTracker()}

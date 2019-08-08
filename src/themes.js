@@ -1,51 +1,51 @@
 const themes = [
 	{
-		color: "violet",
+		color: "#6e00ff",
 		name: "Violet",
 		dataMax: "#6e00ff",
 		dataMin: "#bb00ff"
 	},
 	{
-		color: "blue",
+		color: "#3030FF",
 		name: "Blue",
 		dataMax: "#3030ff",
-		dataMin: "#306eff"
+		dataMin: "#3087FF"
 	},
 	{
-		color:"green",
+		color:"#36A922",
 		name: "Green",
 		dataMax: "#208537",
-		dataMin: "#28a745"
+		dataMin: "#4DCC0D"
 	},
 	{
-		color:"orchid",
+		color:"#CC53E6",
 		name: "Orchid",
-		dataMax: "#b241ce",
-		dataMin: "#c269d8"
+		dataMax: "#CC33CC",
+		dataMin: "#CC73FF"
 	},
 	{
-		color: "turquoise",
+		color: "#00CED2",
 		name: "Turquoise",
 		dataMax: "#00b5b8",
 		dataMin: "#00e7eb"
 	},
 	{
-		color: "dodgerBlue",
+		color: "#1E98FF",
 		name: "Dodger Blue",
 		dataMax: "#0483ff",
-		dataMin: "#389dff"
+		dataMin: "#38ADFF"
 	},
 	{
-		color: "purple",
-		name: "Purple",
-		dataMax: "#6a6ae2",
-		dataMin: "#9494ea"
+		color: "#8686EA",
+		name: "Lavender",
+		dataMax: "#5959D4",
+		dataMin: "#B3B3FF"
 	},
 	{
-		color: "orange",
+		color: "#FF9F1A",
 		name: "Orange",
 		dataMax: "#ff7f00",
-		dataMin: "#ff9933"
+		dataMin: "#FFBF33"
 	}
 ];
 

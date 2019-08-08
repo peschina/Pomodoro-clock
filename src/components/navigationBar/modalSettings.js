@@ -33,8 +33,9 @@ function ModalSettings({
             <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
+                min="1"
                 name="workTime"
-                value={workTime.slice(0, -3)}
+                value={workTime}
                 onChange={onChange}
               />
             </Col>
@@ -44,8 +45,9 @@ function ModalSettings({
             <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
+                min="1"
                 name="shortBreakTime"
-                value={shortBreakTime.slice(0, -3)}
+                value={shortBreakTime}
                 onChange={onChange}
               />
             </Col>
@@ -55,8 +57,9 @@ function ModalSettings({
             <Col sm="5" className="mb-2">
               <Form.Control
                 type="number"
+                min="1"
                 name="longBreakTime"
-                value={longBreakTime.slice(0, -3)}
+                value={longBreakTime}
                 onChange={onChange}
               />
             </Col>

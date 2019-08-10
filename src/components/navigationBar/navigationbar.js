@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Nav, Navbar } from "react-bootstrap";
+import Joi from "joi-browser";
 import ModalAbout from "./modalAbout";
 import ModalSettings from "./modalSettings";
 
@@ -20,11 +21,29 @@ class Navigationbar extends Component {
   handleShowSettings = () => {
     this.setState({ showSettings: true });
   };
+  
+  schema = {
+    workTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for work"),
+    shortBreakTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for short break"),
+    longBreakTime: Joi.number()
+      .required()
+      .min(1)
+      .label("Time for long break"),
+    lBDelay: Joi.number()
+      .required()
+      .label("Long break delay")
+  };
 
   // closes the modal for settings
   handleCloseSettings = () => {
     const { validateForm, saveChanges } = this.props;
-    const errors = validateForm();
+    const errors = validateForm(this.schema);
     if (errors) return;
     this.setState({ showSettings: false });
     saveChanges();

@@ -20,9 +20,9 @@ class App extends React.Component {
       timerId: 0,
       start: 0,
       // this property is used by tick method
-      startTime: "25",
+      startTime: "25:00",
       // value displayed by timer
-      currentTime: "",
+      currentTime: "25:00",
       workTime: "25",
       shortBreakTime: "5",
       longBreakTime: "30",
@@ -32,25 +32,21 @@ class App extends React.Component {
       // session is Ready when startTime is updated
       sessionReady: "work",
       sessionRunning: "",
-      activeKey: "work",
-      // displays modal for settings when toggled
       theme: "violet",
       sound: "on",
       // to set the correct CSS variables for svg animation
-      animationWasPaused: false,
-      errors: {}
+      animationWasPaused: false
     };
     this.notificationDOMRef = React.createRef();
   }
 
   componentDidMount() {
-    this.prepareNewSession();
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
   }
 
   // handles notification component
-  addNotification = (mess, typ) => {
+  addNotification(mess, typ) {
     this.notificationDOMRef.current.addNotification({
       message: mess,
       type: typ,
@@ -85,9 +81,9 @@ class App extends React.Component {
       this.addNotification("session has already started", "warning");
       return;
     }
-    this.setState({ sessionRunning: sessionReady });
     // toggle session that is starting now
     this.setState({
+      sessionRunning: sessionReady,
       start: Date.now(),
       timerId: setInterval(this.setTimer, 1000)
     });
@@ -176,10 +172,7 @@ class App extends React.Component {
     this.setState({ [name]: value });
     if (value === "0") {
       if (name === "lBDelay") return;
-      this.addNotification(
-        "Session should last at least one minute",
-        "warning"
-      );
+      this.addNotification("Session should last at least one minute", "danger");
       setTimeout(() => this.setState({ [name]: 1 }), 800);
       return;
     }
@@ -201,59 +194,33 @@ class App extends React.Component {
       this.addNotification("Session is already running", "warning");
       return;
     }
-    this.setState(
-      {
-        sessionReady: selected
-      },
-      () => this.prepareNewSession()
-    );
+    this.setState({ sessionReady: selected }, () => this.prepareNewSession());
     clearInterval(timerId);
-    // update activeKey
-    this.setState({ activeKey: selected });
     // reset svg timer
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
     circle.style.setProperty("--pauseHandler", "paused");
   };
 
-  schema = {
-    workTime: Joi.number()
-      .required()
-      .min(1)
-      .label("Time for work"),
-    shortBreakTime: Joi.number()
-      .required()
-      .min(1)
-      .label("Time for short break"),
-    longBreakTime: Joi.number()
-      .required()
-      .min(1)
-      .label("Time for long break"),
-    lBDelay: Joi.number()
-      .required()
-      .label("Long break delay")
-  };
-
-  validateForm = () => {
-    const errors = this.validate();
-
-    this.setState({ errors: errors ? errors : {} }, () => {
-      const messages = Object.values(this.state.errors);
+  validateForm = schema => {
+    const errors = this.validate(schema);
+    if (errors) {
+      const messages = Object.values(errors);
       messages.map(m => this.addNotification(m, "danger"));
-    });
-
+    }
     return errors;
   };
 
-  validate = () => {
+  validate = schema => {
+    const { workTime, shortBreakTime, longBreakTime, lBDelay } = this.state;
     const { error } = Joi.validate(
       {
-        workTime: this.state.workTime,
-        shortBreakTime: this.state.shortBreakTime,
-        longBreakTime: this.state.longBreakTime,
-        lBDelay: this.state.lBDelay
+        workTime: workTime,
+        shortBreakTime: shortBreakTime,
+        longBreakTime: longBreakTime,
+        lBDelay: lBDelay
       },
-      this.schema,
+      schema,
       {
         abortEarly: false
       }
@@ -273,16 +240,18 @@ class App extends React.Component {
   };
 
   progressTracker = () => {
+    const { pomodorosCompleted } = this.state;
     return (
       <span className="d-flex justify-content-center pb-5">
-        {`You have completed ${this.state.pomodorosCompleted} pomodoros`}
+        {`You have completed ${pomodorosCompleted} ${
+          pomodorosCompleted === 1 ? "pomodoro" : "pomodoros"
+        }`}
       </span>
     );
   };
 
   alarm = new UIfx({
-    asset: alarm,
-    volume: 0.4
+    asset: alarm
   });
 
   render() {
@@ -291,7 +260,7 @@ class App extends React.Component {
       shortBreakTime,
       longBreakTime,
       currentTime,
-      activeKey,
+      sessionReady,
       lBDelay,
       pomodorosCompleted,
       theme,
@@ -303,7 +272,7 @@ class App extends React.Component {
           <Container>
             <div>
               <Navigationbar
-                activeKeyInNav={activeKey}
+                activeKeyInNav={sessionReady}
                 workTime={workTime}
                 shortBreakTime={shortBreakTime}
                 longBreakTime={longBreakTime}

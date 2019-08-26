@@ -1,28 +1,36 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { Nav, Navbar } from "react-bootstrap";
 import Joi from "joi-browser";
 import ModalAbout from "./modalAbout";
 import ModalSettings from "./modalSettings";
 
-class Navigationbar extends Component {
-  state = {
-    showAbout: false,
-    showSettings: false
+const Navigationbar = props => {
+  const [showAbout, setShowAbout] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const {
+    activeKeyInNav,
+    workTime,
+    shortBreakTime,
+    longBreakTime,
+    lBDelay,
+    theme,
+    sound,
+    onSelect,
+    onChange,
+    validateForm,
+    saveChanges
+  } = props;
+
+  const handleToggleAbout = () => {
+    setShowAbout(!showAbout);
   };
 
-  handleShowAbout = () => {
-    this.setState({ showAbout: true });
+  const handleShowSettings = () => {
+    setShowSettings(!showSettings);
   };
 
-  handleCloseAbout = () => {
-    this.setState({ showAbout: false });
-  };
-
-  handleShowSettings = () => {
-    this.setState({ showSettings: true });
-  };
-  
-  schema = {
+  const schema = {
     workTime: Joi.number()
       .required()
       .min(1)
@@ -41,92 +49,77 @@ class Navigationbar extends Component {
   };
 
   // closes the modal for settings
-  handleCloseSettings = () => {
-    const { validateForm, saveChanges } = this.props;
-    const errors = validateForm(this.schema);
+  const handleCloseSettings = () => {
+    const errors = validateForm(schema);
     if (errors) return;
-    this.setState({ showSettings: false });
+    setShowSettings(false);
     saveChanges();
   };
 
-  renderNavItem = (name, label) => {
+  const renderNavItem = (name, label) => {
     return (
       <Nav.Item>
-        <Nav.Link className="rounded-pill" name={name} eventKey={name}>
+        <Nav.Link className="rounded-pill" name eventKey={name}>
           {label}
         </Nav.Link>
       </Nav.Item>
     );
   };
 
-  render() {
-    const {
-      activeKeyInNav,
-      workTime,
-      shortBreakTime,
-      longBreakTime,
-      lBDelay,
-      theme,
-      sound,
-      onSelect,
-      onChange
-    } = this.props;
-    const { showAbout, showSettings } = this.state;
-    return (
-      <div>
-        <Navbar
-          className="justify-content-between border-bottom"
-          variant="dark"
-          collapseOnSelect
-          expand="lg"
+  return (
+    <div>
+      <Navbar
+        className="justify-content-between border-bottom"
+        variant="dark"
+        collapseOnSelect
+        expand="lg"
+      >
+        <Navbar.Brand disabled>Ticki</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse
+          className="justify-content-end"
+          style={{ color: "white" }}
         >
-          <Navbar.Brand disabled>Ticki</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse
-            className="justify-content-end"
-            style={{ color: "white" }}
-          >
-            <Nav>
-              <Nav.Link onClick={this.handleShowSettings}>
-                {"Settings "}
-                <i className="fas fa-cog" />
-              </Nav.Link>
-              <Nav.Link onClick={this.handleShowAbout}>
-                {"About "}
-                <i className="fas fa-question" />
-              </Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Navbar>
-
-        <div className="d-flex flex-column flex-md-row flex-sm-row justify-content-center p-3 px-md-4 mb-3">
-          <Nav
-            className="justify-content-center"
-            variant="pills"
-            key={activeKeyInNav}
-            defaultActiveKey={activeKeyInNav}
-            onSelect={selectedKey => onSelect(`${selectedKey}`)}
-          >
-            {this.renderNavItem("work", "Work")}
-            {this.renderNavItem("shortBreak", "Short break")}
-            {this.renderNavItem("longBreak", "Long break")}
+          <Nav>
+            <Nav.Link onClick={handleShowSettings}>
+              {"Settings "}
+              <i className="fas fa-cog" />
+            </Nav.Link>
+            <Nav.Link onClick={handleToggleAbout}>
+              {"About "}
+              <i className="fas fa-question" />
+            </Nav.Link>
           </Nav>
-          <ModalAbout show={showAbout} onClose={this.handleCloseAbout} />
-          <ModalSettings
-            show={showSettings}
-            workTime={workTime}
-            shortBreakTime={shortBreakTime}
-            longBreakTime={longBreakTime}
-            lBDelay={lBDelay}
-            theme={theme}
-            sound={sound}
-            onClose={this.handleCloseSettings}
-            onChange={onChange}
-          />
-        </div>
+        </Navbar.Collapse>
+      </Navbar>
+
+      <div className="d-flex flex-column flex-md-row flex-sm-row justify-content-center p-3 px-md-4 mb-3">
+        <Nav
+          className="justify-content-center"
+          variant="pills"
+          key={activeKeyInNav}
+          defaultActiveKey={activeKeyInNav}
+          onSelect={selectedKey => onSelect(`${selectedKey}`)}
+        >
+          {renderNavItem("work", "Work")}
+          {renderNavItem("shortBreak", "Short break")}
+          {renderNavItem("longBreak", "Long break")}
+        </Nav>
+        <ModalAbout show={showAbout} onClose={handleToggleAbout} />
+        <ModalSettings
+          show={showSettings}
+          workTime={workTime}
+          shortBreakTime={shortBreakTime}
+          longBreakTime={longBreakTime}
+          lBDelay={lBDelay}
+          theme={theme}
+          sound={sound}
+          onClose={handleCloseSettings}
+          onChange={onChange}
+        />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Navigationbar;

@@ -69,6 +69,7 @@ function ModalSettings({
             <Col sm="5">
               <Form.Control
                 type="number"
+                min="0"
                 name="lBDelay"
                 value={lBDelay}
                 onChange={onChange}

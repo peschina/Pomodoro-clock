@@ -14,10 +14,14 @@ const ToDoList = () => {
   const [items, setItems] = useState(dummyData);
 
   const toggleCompleted = id => {
-    const list = items.map(item => ({
-      ...item,
-      ...{ completed: item.id === id ? !item.completed : item.completed }
-    }));
+    const list = [
+      ...items.filter(item => item.id !== id),
+      {
+        ...items.find(item => item.id === id),
+        completed: true
+      }
+    ];
+
     setItems(list);
   };
 

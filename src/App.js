@@ -5,7 +5,7 @@ import Joi from "joi-browser";
 import UIfx from "uifx";
 import Navigationbar from "./components/navigationBar/navigationbar";
 import TimerControls from "./components/timer/timerControls";
-import ToDoListForm from "./components/toDoList/toDoList";
+import ToDoList from "./components/toDoList/toDoList";
 import Timer from "./components/timer/timer";
 import { tick, toSeconds, updateTheme } from "./utils";
 import "./styles.css";
@@ -57,7 +57,7 @@ class App extends React.Component {
       dismiss: { duration: 5000 },
       dismissable: { click: true }
     });
-  };
+  }
 
   prepareNewSession = () => {
     const val = this.state[`${this.state.sessionReady}Time`];
@@ -299,7 +299,7 @@ class App extends React.Component {
           </Container>
         </div>
         <Container className="pt-4">
-          <ToDoListForm />
+          <ToDoList />
           <hr />
           {this.progressTracker()}
         </Container>

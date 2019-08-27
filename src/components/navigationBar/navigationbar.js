@@ -59,7 +59,7 @@ const Navigationbar = props => {
   const renderNavItem = (name, label) => {
     return (
       <Nav.Item>
-        <Nav.Link className="rounded-pill" name eventKey={name}>
+        <Nav.Link className="rounded-pill" name={name} eventKey={name}>
           {label}
         </Nav.Link>
       </Nav.Item>

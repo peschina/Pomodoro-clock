@@ -8,9 +8,10 @@ import TimerControls from "./components/timer/timerControls";
 import ToDoList from "./components/toDoList/toDoList";
 import Timer from "./components/timer/timer";
 import { tick, toSeconds, updateTheme } from "./utils";
+import { SettingContext } from "./settingsContext";
+import alarm from "./alarm.mp3";
 import "./styles.css";
 import "react-notifications-component/dist/theme.css";
-import alarm from "./alarm.mp3";
 
 class App extends React.Component {
   constructor() {
@@ -215,10 +216,10 @@ class App extends React.Component {
     const { workTime, shortBreakTime, longBreakTime, lBDelay } = this.state;
     const { error } = Joi.validate(
       {
-        workTime: workTime,
-        shortBreakTime: shortBreakTime,
-        longBreakTime: longBreakTime,
-        lBDelay: lBDelay
+        workTime,
+        shortBreakTime,
+        longBreakTime,
+        lBDelay
       },
       schema,
       {
@@ -262,7 +263,6 @@ class App extends React.Component {
       currentTime,
       sessionReady,
       lBDelay,
-      pomodorosCompleted,
       theme,
       sound
     } = this.state;
@@ -271,24 +271,28 @@ class App extends React.Component {
         <div id="background">
           <Container>
             <div>
-              <Navigationbar
-                activeKeyInNav={sessionReady}
-                workTime={workTime}
-                shortBreakTime={shortBreakTime}
-                longBreakTime={longBreakTime}
-                lBDelay={lBDelay}
-                theme={theme}
-                sound={sound}
-                saveChanges={this.saveChangesInSettings}
-                validateForm={this.validateForm}
-                onChange={this.handleChange}
-                onSelect={this.handleSelect}
-              />
+              <SettingContext.Provider
+                value={{
+                  settings: {
+                    workTime,
+                    shortBreakTime,
+                    longBreakTime,
+                    lBDelay,
+                    sound,
+                    theme
+                  }
+                }}
+              >
+                <Navigationbar
+                  activeKeyInNav={sessionReady}
+                  saveChanges={this.saveChangesInSettings}
+                  validateForm={this.validateForm}
+                  onChange={this.handleChange}
+                  onSelect={this.handleSelect}
+                />
+              </SettingContext.Provider>
               <ReactNotification ref={this.notificationDOMRef} />
-              <Timer
-                currentTime={currentTime}
-                pomodorosCompleted={pomodorosCompleted}
-              />
+              <Timer currentTime={currentTime} />
               <TimerControls
                 onStart={this.handleStart}
                 onStop={this.handleStop}

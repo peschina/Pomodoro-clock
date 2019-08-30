@@ -1,18 +1,52 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Modal, Form, Col, Row, Button } from "react-bootstrap";
+import { SettingContext } from "./../../settingsContext";
 import themes from "../../themes";
 
-function ModalSettings({
-  show,
-  workTime,
-  shortBreakTime,
-  longBreakTime,
-  lBDelay,
-  theme,
-  sound,
-  onClose,
-  onChange
-}) {
+function ModalSettings({ show, onClose, onChange }) {
+  const { settings } = useContext(SettingContext);
+  const {
+    workTime,
+    shortBreakTime,
+    longBreakTime,
+    lBDelay,
+    sound,
+    theme
+  } = settings;
+
+  const renderFormCheck = value => {
+    return (
+      <Form.Check
+        inline
+        className="col-2"
+        type="radio"
+        label={value}
+        name="sound"
+        value={value}
+        checked={sound === value}
+        onChange={onChange}
+      />
+    );
+  };
+
+  const renderInput = (label, name, value, min) => {
+    return (
+      <React.Fragment>
+        <Form.Label column sm="5">
+          {label}
+        </Form.Label>
+        <Col sm="5" className="mb-2">
+          <Form.Control
+            type="number"
+            min={min}
+            name={name}
+            value={value}
+            onChange={onChange}
+          />
+        </Col>
+      </React.Fragment>
+    );
+  };
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -27,54 +61,10 @@ function ModalSettings({
             Select the amount of time:
           </Form.Label>
           <Form.Group as={Row} className="justify-content-center">
-            <Form.Label column sm="5">
-              Work
-            </Form.Label>
-            <Col sm="5" className="mb-2">
-              <Form.Control
-                type="number"
-                min="1"
-                name="workTime"
-                value={workTime}
-                onChange={onChange}
-              />
-            </Col>
-            <Form.Label column sm="5">
-              Short break
-            </Form.Label>
-            <Col sm="5" className="mb-2">
-              <Form.Control
-                type="number"
-                min="1"
-                name="shortBreakTime"
-                value={shortBreakTime}
-                onChange={onChange}
-              />
-            </Col>
-            <Form.Label column sm="5">
-              Long break
-            </Form.Label>
-            <Col sm="5" className="mb-2">
-              <Form.Control
-                type="number"
-                min="1"
-                name="longBreakTime"
-                value={longBreakTime}
-                onChange={onChange}
-              />
-            </Col>
-            <Form.Label column sm="5">
-              Long break delay
-            </Form.Label>
-            <Col sm="5">
-              <Form.Control
-                type="number"
-                min="0"
-                name="lBDelay"
-                value={lBDelay}
-                onChange={onChange}
-              />
-            </Col>
+            {renderInput("Work", "workTime", workTime, 1)}
+            {renderInput("Short Break", "shortBreakTime", shortBreakTime, 1)}
+            {renderInput("Long Break", "longBreakTime", longBreakTime, 1)}
+            {renderInput("Long Break Delay", "lBDelay", lBDelay, 0)}
           </Form.Group>
           <Form.Group as={Row} className="d-flex justify-content-center mt-4">
             <Form.Label
@@ -90,16 +80,19 @@ function ModalSettings({
               value={theme}
               onChange={onChange}
             >
-              {themes.map(theme => (
-                <option
-                  key={theme.color}
-                  value={theme.color}
-                  data-max={theme.dataMax}
-                  data-min={theme.dataMin}
-                >
-                  {theme.name}
-                </option>
-              ))}
+              {themes.map(theme => {
+                const { color, dataMax, dataMin, name } = theme;
+                return (
+                  <option
+                    key={color}
+                    value={color}
+                    data-max={dataMax}
+                    data-min={dataMin}
+                  >
+                    {name}
+                  </option>
+                );
+              })}
             </Form.Control>
             <Col sm="1" />
           </Form.Group>
@@ -110,26 +103,8 @@ function ModalSettings({
             >
               Sound
             </Form.Label>
-            <Form.Check
-              inline
-              className="col-2"
-              type="radio"
-              label="on"
-              name="sound"
-              value="on"
-              checked={sound === "on"}
-              onChange={onChange}
-            />
-            <Form.Check
-              inline
-              className="col-2"
-              type="radio"
-              label="off"
-              name="sound"
-              value="off"
-              checked={sound === "off"}
-              onChange={onChange}
-            />
+            {renderFormCheck("on", onChange)}
+            {renderFormCheck("off", onChange)}
           </Form.Group>
         </Form>
       </Modal.Body>

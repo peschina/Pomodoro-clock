@@ -7,12 +7,6 @@ import schema from "./schema";
 
 const Navigationbar = ({
   activeKeyInNav,
-  workTime,
-  shortBreakTime,
-  longBreakTime,
-  lBDelay,
-  theme,
-  sound,
   onSelect,
   onChange,
   validateForm,
@@ -64,16 +58,10 @@ const Navigationbar = ({
         </Navbar.Collapse>
       </Navbar>
       <div className="d-flex flex-column flex-md-row flex-sm-row justify-content-center p-3 px-md-4 mb-3">
-        <SessionNav activeKeyInNav={activeKeyInNav} onSelect={onSelect} />
+        <SessionNav {...{ activeKeyInNav, onSelect }} />
         <ModalAbout show={showAbout} onClose={handleToggleAbout} />
         <ModalSettings
           show={showSettings}
-          workTime={workTime}
-          shortBreakTime={shortBreakTime}
-          longBreakTime={longBreakTime}
-          lBDelay={lBDelay}
-          theme={theme}
-          sound={sound}
           onClose={handleCloseSettings}
           onChange={onChange}
         />

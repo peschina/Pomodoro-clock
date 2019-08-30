@@ -14,36 +14,17 @@ function ModalSettings({ show, onClose, onChange }) {
     theme
   } = settings;
 
-  const renderFormCheck = value => {
-    return (
-      <Form.Check
-        inline
-        className="col-2"
-        type="radio"
-        label={value}
-        name="sound"
-        checked={sound === value}
-        {...{ value, onChange }}
-      />
-    );
-  };
+  const renderInput = (label, name, value, min) => (
+    <>
+      <Form.Label column sm="5">
+        {label}
+      </Form.Label>
+      <Col sm="5" className="mb-2">
+        <Form.Control type="number" min={min} {...{ name, value, onChange }} />
+      </Col>
+    </>
+  );
 
-  const renderInput = (label, name, value, min) => {
-    return (
-      <React.Fragment>
-        <Form.Label column sm="5">
-          {label}
-        </Form.Label>
-        <Col sm="5" className="mb-2">
-          <Form.Control
-            type="number"
-            min={min}
-            {...{ name, value, onChange }}
-          />
-        </Col>
-      </React.Fragment>
-    );
-  };
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -77,19 +58,16 @@ function ModalSettings({ show, onClose, onChange }) {
               value={theme}
               onChange={onChange}
             >
-              {themes.map(theme => {
-                const { color, dataMax, dataMin, name } = theme;
-                return (
-                  <option
-                    key={color}
-                    value={color}
-                    data-max={dataMax}
-                    data-min={dataMin}
-                  >
-                    {name}
-                  </option>
-                );
-              })}
+              {themes.map(({ color, dataMax, dataMin, name }) => (
+                <option
+                  key={color}
+                  value={color}
+                  data-max={dataMax}
+                  data-min={dataMin}
+                >
+                  {name}
+                </option>
+              ))}
             </Form.Control>
             <Col sm="1" />
           </Form.Group>
@@ -100,8 +78,17 @@ function ModalSettings({ show, onClose, onChange }) {
             >
               Sound
             </Form.Label>
-            {renderFormCheck("on", onChange)}
-            {renderFormCheck("off", onChange)}
+            {["on", "off"].map(value => (
+              <Form.Check
+                inline
+                className="col-2"
+                type="radio"
+                label={value}
+                name="sound"
+                checked={sound === value}
+                {...{ value, onChange }}
+              />
+            ))}
           </Form.Group>
         </Form>
       </Modal.Body>

@@ -15,24 +15,19 @@ const Navigationbar = ({
   const [showAbout, setShowAbout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleToggleAbout = () => {
-    setShowAbout(!showAbout);
-  };
+  const handleToggleAbout = () => setShowAbout(!showAbout);
 
-  const handleShowSettings = () => {
-    setShowSettings(!showSettings);
-  };
+  const handleShowSettings = () => setShowSettings(!showSettings);
 
   // closes the modal for settings
   const handleCloseSettings = () => {
-    const errors = validateForm(schema);
-    if (errors) return;
+    if (validateForm(schema)) return;
     setShowSettings(false);
     saveChanges();
   };
 
   return (
-    <div>
+    <>
       <Navbar
         className="justify-content-between border-bottom"
         variant="dark"
@@ -47,12 +42,10 @@ const Navigationbar = ({
         >
           <Nav>
             <Nav.Link onClick={handleShowSettings}>
-              {"Settings "}
-              <i className="fas fa-cog" />
+              Settings <i className="fas fa-cog" />
             </Nav.Link>
             <Nav.Link onClick={handleToggleAbout}>
-              {"About "}
-              <i className="fas fa-question" />
+              About <i className="fas fa-question" />
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>
@@ -66,7 +59,7 @@ const Navigationbar = ({
           onChange={onChange}
         />
       </div>
-    </div>
+    </>
   );
 };
 

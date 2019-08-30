@@ -22,9 +22,8 @@ function ModalSettings({ show, onClose, onChange }) {
         type="radio"
         label={value}
         name="sound"
-        value={value}
         checked={sound === value}
-        onChange={onChange}
+        {...{ value, onChange }}
       />
     );
   };
@@ -39,9 +38,7 @@ function ModalSettings({ show, onClose, onChange }) {
           <Form.Control
             type="number"
             min={min}
-            name={name}
-            value={value}
-            onChange={onChange}
+            {...{ name, value, onChange }}
           />
         </Col>
       </React.Fragment>

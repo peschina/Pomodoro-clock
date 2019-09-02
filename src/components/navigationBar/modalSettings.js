@@ -81,6 +81,7 @@ function ModalSettings({ show, onClose, onChange }) {
             {["on", "off"].map(value => (
               <Form.Check
                 inline
+                key={value}
                 className="col-2"
                 type="radio"
                 label={value}

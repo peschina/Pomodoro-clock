@@ -235,9 +235,27 @@ class App extends React.Component {
   };
 
   saveChangesInSettings = () => {
-    this.prepareNewSession();
+    // reset session if setting of running session has been modified
+    this.updateSessionOnSettingChange();
     // trigger notification
     this.addNotification("Changes have been saved!", "success");
+  };
+
+  updateSessionOnSettingChange = () => {
+    const {
+      sessionRunning,
+      startTime,
+      sessionReady,
+      animationWasPaused
+    } = this.state;
+    const val = this.state[`${sessionReady}Time`];
+    const latestSetting = val < 10 ? `0${val}:00` : `${val}:00`;
+    if (sessionRunning !== "") {
+      if (startTime !== latestSetting) this.handleReset();
+      return;
+    }
+    if (animationWasPaused) return;
+    if (startTime !== latestSetting) this.prepareNewSession();
   };
 
   progressTracker = () => {

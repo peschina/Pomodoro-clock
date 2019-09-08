@@ -3,28 +3,19 @@ import { Nav, Navbar } from "react-bootstrap";
 import SessionNav from "./sessionNav";
 import ModalAbout from "./modalAbout";
 import ModalSettings from "./modalSettings";
-import schema from "./schema";
 
 const Navigationbar = ({
   activeKeyInNav,
   onSelect,
   onChange,
-  validateForm,
-  saveChanges
+  onSaveSetting
 }) => {
   const [showAbout, setShowAbout] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   const handleToggleAbout = () => setShowAbout(!showAbout);
 
-  const handleShowSettings = () => setShowSettings(!showSettings);
-
-  // closes the modal for settings
-  const handleCloseSettings = () => {
-    if (validateForm(schema)) return;
-    setShowSettings(false);
-    saveChanges();
-  };
+  const handleToggleSettings = () => setShowSettings(!showSettings);
 
   return (
     <>
@@ -41,7 +32,7 @@ const Navigationbar = ({
           style={{ color: "white" }}
         >
           <Nav>
-            <Nav.Link onClick={handleShowSettings}>
+            <Nav.Link onClick={handleToggleSettings}>
               Settings <i className="fas fa-cog" />
             </Nav.Link>
             <Nav.Link onClick={handleToggleAbout}>
@@ -55,8 +46,9 @@ const Navigationbar = ({
         <ModalAbout show={showAbout} onClose={handleToggleAbout} />
         <ModalSettings
           show={showSettings}
-          onClose={handleCloseSettings}
+          onClose={handleToggleSettings}
           onChange={onChange}
+          onSaveSetting={onSaveSetting}
         />
       </div>
     </>

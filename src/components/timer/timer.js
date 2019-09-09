@@ -21,6 +21,7 @@ const Timer = ({
   lBDelay,
   sessionReady: sessionSelected,
   onSelect,
+  onSessionCompleted,
   sessionSetting,
   sound
 }) => {
@@ -47,6 +48,10 @@ const Timer = ({
   }
 
   useDidUpdateEffect(start);
+
+  useEffect(() => {
+    handleReset();
+  }, [sessionSetting()]);
 
   useEffect(() => {
     setStartTime(sessionSetting);
@@ -87,7 +92,7 @@ const Timer = ({
       return;
     }
     // toggle session that is starting now
-    setSessionRunning(refSessionReady);
+    setSessionRunning(true);
     setStart(Date.now());
     // start svg timer
     let circle = document.querySelector("circle");
@@ -109,15 +114,13 @@ const Timer = ({
 
     if (refCurrentTime.current === "00:00") {
       clearInterval(refTimerId.current);
-      if (sound === "on") {
-        console.log("sound on");
-        alarm.play();
-      }
+      if (sound === "on") alarm.play();
       if (refSessionReady.current === "work") {
         // check if we already have n pomodoros completed and need to switch to long break
         setPomodorosCompleted(pomodorosCompleted + 1);
         const remainder = (pomodorosCompleted + 1) % lBDelay;
         const nextSession = remainder === 0 ? "longBreak" : "shortBreak";
+        onSessionCompleted(pomodorosCompleted + 1);
         setSessionReady(nextSession);
         onSelect(nextSession);
       } else {
@@ -130,7 +133,7 @@ const Timer = ({
   };
 
   const handleStop = () => {
-    if (!sessionRunning) {
+    if (!refSessionRunning.current) {
       addNotification("session isn't running", "warning", notificationDOMRef);
       return;
     }
@@ -138,16 +141,12 @@ const Timer = ({
     // pause svg timer
     const circle = document.querySelector("circle");
     circle.style.setProperty("--pauseHandler", "paused");
-    setSessionRunning("");
+    setSessionRunning(false);
     setStartTime(currentTime);
     setAnimationWasPaused(true);
   };
 
   const handleReset = () => {
-    if (!sessionRunning) {
-      addNotification("session isn't running", "warning", notificationDOMRef);
-      return;
-    }
     clearInterval(timerId);
     setSessionRunning(false);
     setStartTime(sessionSetting);

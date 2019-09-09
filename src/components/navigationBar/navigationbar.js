@@ -7,7 +7,6 @@ import ModalSettings from "./modalSettings";
 const Navigationbar = ({
   activeKeyInNav,
   onSelect,
-  onChange,
   onSaveSetting
 }) => {
   const [showAbout, setShowAbout] = useState(false);
@@ -47,7 +46,6 @@ const Navigationbar = ({
         <ModalSettings
           show={showSettings}
           onClose={handleToggleSettings}
-          onChange={onChange}
           onSaveSetting={onSaveSetting}
         />
       </div>

@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useState, useRef } from "react";
 import { Modal, Form, Col, Row, Button } from "react-bootstrap";
 import ReactNotification from "react-notifications-component";
 import Joi from "joi-browser";
@@ -8,17 +8,11 @@ import themes from "../../themes";
 import { addNotification, updateTheme } from "../../utils";
 import "react-notifications-component/dist/theme.css";
 
-function ModalSettings({ show, onClose, onChange, onSaveSetting }) {
+function ModalSettings({ show, onClose, onSaveSetting }) {
   const { settings } = useContext(SettingContext);
+  const [theme, setTheme] = useState("Violet");
 
-  const {
-    workTime,
-    shortBreakTime,
-    longBreakTime,
-    lBDelay,
-    sound,
-    theme
-  } = settings;
+  const { workTime, shortBreakTime, longBreakTime, lBDelay, sound } = settings;
 
   const notificationDOMRef = useRef();
   const workTimeRef = useRef(workTime);
@@ -147,7 +141,7 @@ function ModalSettings({ show, onClose, onChange, onSaveSetting }) {
                 className="col-5 mb-2"
                 name="theme"
                 value={theme}
-                onChange={onChange}
+                onChange={e => setTheme(e.target.value)}
               >
                 {themes.map(({ color, name }) => (
                   <option key={color} value={name}>

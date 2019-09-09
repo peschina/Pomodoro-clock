@@ -10,6 +10,7 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
+      // session length in minutes
       workTime: "25",
       shortBreakTime: "5",
       longBreakTime: "30",
@@ -17,7 +18,6 @@ class App extends React.Component {
       lBDelay: "4",
       pomodorosCompleted: 0,
       sessionReady: "work",
-      theme: "Violet",
       sound: "on"
     };
   }
@@ -32,10 +32,10 @@ class App extends React.Component {
     return val < 10 ? `0${val}:00` : `${val}:00`;
   };
 
-  handleChange = ({ target }) => {
-    const { name, value } = target;
-    this.setState({ [name]: value });
-  };
+  handleSaveSetting = ({ name, value }) => this.setState({ [name]: value });
+
+  handleWorkSessionCompleted = pomodorosCompleted =>
+    this.setState({ pomodorosCompleted });
 
   // this method updates state so that the session is ready to start
   // the session doesn't start automatically, but only when Start button is clicked!
@@ -48,14 +48,6 @@ class App extends React.Component {
     let circle = document.querySelector("circle");
     circle.style.setProperty("--time", "initial");
     circle.style.setProperty("--pauseHandler", "paused");
-  };
-
-  handleSaveSetting = ({ name, value }) => {
-    this.setState({ [name]: value });
-    // update session running if its setting has changed
-    const session = name.slice(0, -4);
-    if (session === this.state.sessionReady)
-      console.log("need to reset session");
   };
 
   progressTracker = () => {
@@ -76,7 +68,6 @@ class App extends React.Component {
       longBreakTime,
       sessionReady,
       lBDelay,
-      theme,
       sound
     } = this.state;
     return (
@@ -91,25 +82,24 @@ class App extends React.Component {
                     shortBreakTime,
                     longBreakTime,
                     lBDelay,
-                    sound,
-                    theme
+                    sound
                   }
                 }}
               >
                 <Navigationbar
                   activeKeyInNav={sessionReady}
                   validateForm={this.validateForm}
-                  onChange={this.handleChange}
                   onSelect={this.handleSelect}
                   onSaveSetting={this.handleSaveSetting}
                 />
               </SettingContext.Provider>
               <Timer
-                lBDelay={lBDelay}
                 sessionReady={sessionReady}
+                lBDelay={lBDelay}
+                sound={sound}
                 onSelect={this.handleSelect}
                 sessionSetting={this.getSessionSetting}
-                sound={sound}
+                onSessionCompleted={this.handleWorkSessionCompleted}
               />
             </div>
             <div id="backgroundLarge" />

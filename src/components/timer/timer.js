@@ -25,10 +25,8 @@ const Timer = ({
   sessionSetting,
   sound
 }) => {
-  // prop used by SetInterval and ClearInterval
-  const [timerId, setTimerId] = useState(0);
+  // this two properties are used by tick method
   const [start, setStart] = useState();
-  // this property is used by tick method
   const [startTime, setStartTime] = useState("25:00");
   // value displayed by timer
   const [currentTime, setCurrentTime] = useState("25:00");
@@ -38,16 +36,24 @@ const Timer = ({
   // to set the correct CSS variables for svg animation
   const [animationWasPaused, setAnimationWasPaused] = useState(false);
 
-  function useDidUpdateEffect(start) {
+  function useInterval(callback, delay, start) {
     const didMountRef = useRef(false);
 
+    // Set up the interval.
     useEffect(() => {
-      if (didMountRef.current) setTimerId(setInterval(setTimer, 1000));
-      else didMountRef.current = true;
-    }, [start]);
+      if (!didMountRef.current) {
+        didMountRef.current = true;
+        return;
+      }
+      if (delay !== null) {
+        let id = setInterval(callback, delay);
+        return () => clearInterval(id);
+      }
+    }, [callback, delay, start]);
   }
 
-  useDidUpdateEffect(start);
+  // call useInterval hook with start as dependency
+  useInterval(() => setTimer(), sessionRunning ? 1000 : null, start);
 
   useEffect(() => {
     handleReset();
@@ -61,10 +67,6 @@ const Timer = ({
 
   useEffect(() => {
     setSessionReady(sessionSelected);
-    setStartTime(sessionSetting);
-    setCurrentTime(sessionSetting);
-    setSessionRunning(false);
-    clearInterval(refTimerId.current);
   }, [sessionSelected, sessionSetting]);
 
   const notificationDOMRef = useRef();
@@ -73,13 +75,11 @@ const Timer = ({
   let refSessionReady = useRef(sessionReady);
   let refStartTime = useRef(startTime);
   let refSessionRunning = useRef(sessionRunning);
-  let refTimerId = useRef(timerId);
 
   useLatestState(currentTime, refCurrentTime);
   useLatestState(sessionReady, refSessionReady);
   useLatestState(startTime, refStartTime);
   useLatestState(sessionRunning, refSessionRunning);
-  useLatestState(timerId, refTimerId);
 
   const handleStart = () => {
     // disable button if session is already running
@@ -113,7 +113,8 @@ const Timer = ({
     setCurrentTime(display);
 
     if (refCurrentTime.current === "00:00") {
-      clearInterval(refTimerId.current);
+      // stop interval
+      setSessionRunning(false);
       if (sound === "on") alarm.play();
       if (refSessionReady.current === "work") {
         // check if we already have n pomodoros completed and need to switch to long break
@@ -127,8 +128,7 @@ const Timer = ({
         onSelect("work");
         setSessionReady("work");
       }
-      // give time to update svg circle CSS var
-      setTimeout(handleStart, 1);
+      handleStart();
     }
   };
 
@@ -137,7 +137,6 @@ const Timer = ({
       addNotification("session isn't running", "warning", notificationDOMRef);
       return;
     }
-    clearInterval(timerId);
     // pause svg timer
     const circle = document.querySelector("circle");
     circle.style.setProperty("--pauseHandler", "paused");
@@ -147,7 +146,6 @@ const Timer = ({
   };
 
   const handleReset = () => {
-    clearInterval(timerId);
     setSessionRunning(false);
     setStartTime(sessionSetting);
     setCurrentTime(sessionSetting);

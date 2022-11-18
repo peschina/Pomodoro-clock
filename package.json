@@ -9,7 +9,7 @@
     "react-bootstrap": "^1.0.0-beta.8",
     "react-dom": "^16.8.6",
     "react-notifications-component": "^1.1.1",
-    "react-scripts": "3.0.0",
+    "react-scripts": "5.0.1",
     "uifx": "^1.0.8"
   },
   "scripts": {
